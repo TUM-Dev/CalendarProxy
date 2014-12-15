@@ -2,6 +2,7 @@
 
 require 'vendor/autoload.php';
 
+//Comment this out to enable debugging
 unset($_GET['debug']);
 
 //Only output errors if debugging
