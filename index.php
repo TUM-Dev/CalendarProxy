@@ -13,6 +13,21 @@ function cleanEvent(&$e){
 	array('Tutorübungen', 'Grundlagen: ','Betriebssysteme und Systemsoftware', 'Einführung in die Informatik 2'), 
 	array('TÜ','G','BS','INFO2'), 
 	utf8_decode($e['SUMMARY'])));
+	
+	//Add missing fields if possible
+	if(!isset($e['GEO'])){
+		$e['GEO']='';
+	}
+	if(!isset($e['LOCATION'])){
+		$e['LOCATION']='';
+	}
+	if(!isset($e['URL'])){
+		$e['URL']='';
+	}
+	if(!isset($e['DESCRIPTION'])){
+		$e['DESCRIPTION']='';
+	}
+	
 }
 
 function dumpMe($arr, $echo=true) {
@@ -31,7 +46,6 @@ if(!isset($_GET['pStud'],$_GET['pToken'])){
 }
 
 //Parse the file
-//$calAddr='https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=F788EDBE5A89A0D7&pToken=3D5F4BACDD4FEC183F70C6A226659094CE516EE61D41C0C20B0A5E2D61275706';
 $calAddr = 'https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=' . $_GET['pStud'].'&pToken='.$_GET['pToken'];
 $ical   = new ICal($calAddr);
 $allEvents=$ical->events();
@@ -51,9 +65,14 @@ foreach($allEvents as $e){
 	
 	//Create new and save it
 	$vEvent
+	->setUniqueId($e['UID'])
     ->setDtStart(new \DateTime($e['DTSTART']))
     ->setDtEnd(new \DateTime($e['DTEND']))
-    ->setSummary($e['SUMMARY']);
+    ->setSummary($e['SUMMARY'])
+	->setDescription($e['DESCRIPTION'])
+	->setLocation($e['LOCATION'],$e['LOCATION'],$e['GEO'])
+	->setUrl($e['URL']);
+	
 	$vEvent->setUseTimezone(true);
 	$cal->addEvent($vEvent);
 }
