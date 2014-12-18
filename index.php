@@ -54,21 +54,21 @@ function cleanEvent(&$e){
 	
 	//Some common replacements: yes its a long list
 	$searchReplace = array();
-	$searchReplace[] = 'Tutorübungen' => 'TÜ';
-	$searchReplace[] = 'Grundlagen' => 'G';
-	$searchReplace[] = 'Betriebssysteme und Systemsoftware' => 'BS';
-	$searchReplace[] = 'Einführung in die Informatik ' => 'INFO';
-	$searchReplace[] = 'Praktikum: Grundlagen der Programmierung' => 'PGP';
-	$searchReplace[] = 'Einführung in die Rechnerarchitektur (Einführung in die Technische Informatik)' => 'ERA';
-	$searchReplace[] = 'Einführung in die Softwaretechnik' => 'EIST';
-	$searchReplace[] = 'Algorithmen und Datenstrukturen' => 'AD';
-	$searchReplace[] = 'Rechnernetze und Verteilte Systeme' => 'RNVS';
-	$searchReplace[] = 'Einfürhung in die Theoretische Informatik' => 'THEO';
-	$searchReplace[] = 'Diskrete Strukturen' => 'DS';
-	$searchReplace[] = 'Diskrete Wahrscheinlichkeitstheorie' => 'DWT';
-	$searchReplace[] = 'Numerisches Programmieren' => 'NumProg';
-	$searchReplace[] = 'Lineare Algebra für Informatik' => 'LinAlg';
-	$searchReplace[] = 'Analysis für Informatik' => 'Analysis';
+	$searchReplace['Tutorübungen'] = 'TÜ';
+	$searchReplace['Grundlagen'] = 'G';
+	$searchReplace['Betriebssysteme und Systemsoftware'] = 'BS';
+	$searchReplace['Einführung in die Informatik '] = 'INFO';
+	$searchReplace['Praktikum: Grundlagen der Programmierung'] = 'PGP';
+	$searchReplace['Einführung in die Rechnerarchitektur (Einführung in die Technische Informatik)'] = 'ERA';
+	$searchReplace['Einführung in die Softwaretechnik'] = 'EIST';
+	$searchReplace['Algorithmen und Datenstrukturen'] = 'AD';
+	$searchReplace['Rechnernetze und Verteilte Systeme'] = 'RNVS';
+	$searchReplace['Einfürhung in die Theoretische Informatik'] = 'THEO';
+	$searchReplace['Diskrete Strukturen'] = 'DS';
+	$searchReplace['Diskrete Wahrscheinlichkeitstheorie'] = 'DWT';
+	$searchReplace['Numerisches Programmieren'] = 'NumProg';
+	$searchReplace['Lineare Algebra für Informatik'] = 'LinAlg';
+	$searchReplace['Analysis für Informatik'] = 'Analysis';
 	
 	//Do the replacement
 	$e['SUMMARY'] = strtr($e['SUMMARY'], $searchReplace);
