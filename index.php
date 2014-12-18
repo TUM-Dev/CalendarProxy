@@ -3,7 +3,7 @@
 require 'vendor/autoload.php';
 
 //Comment this out to enable debugging
-unset($_GET['debug']);
+//unset($_GET['debug']);
 
 //Only output errors if debugging
 if(isset($_GET['debug'])){
@@ -15,9 +15,7 @@ if(isset($_GET['debug'])){
 }
 
 //Make sure php is using utf as well as the output is recognized as utf8
-if(isset($_GET['debug'])){
-	header('Content-Type: text/html; charset=UTF-8');
-}
+header('Content-Type: text/html; charset=UTF-8');
 mb_internal_encoding('UTF-8');
 
 /*
@@ -54,19 +52,22 @@ function cleanEvent(&$e){
 	
 	//Some common replacements for some stuff
 	$e['SUMMARY']=str_replace(
-	array('Tutorübungen', 'Grundlagen: ','Betriebssysteme und Systemsoftware', 'Einführung in die Informatik 2'), 
-	array('TÜ','G','BS','INFO2'), $e['SUMMARY']);
+	array('Tutorübungen', 'Grundlagen: ','Betriebssysteme und Systemsoftware', 'Einführung in die Informatik ', 'Praktikum: Grundlagen der Programmierung', 'Einführung in die Rechnerarchitektur (Einführung in die Technische Informatik)', 'Einführung in die Softwaretechnik', 'Algorithmen und Datenstrukturen', 'Rechnernetze und Verteilte Systeme', 'Einfürhung in die Theoretische Informatik', 'Diskrete Strukturen', 'Diskrete Wahrscheinlichkeitstheorie', 'Numerisches Programmieren', 'Lineare Algebra für Informatik', 'Analysis für Informatik'), 
+	array('TÜ','G','BS','INFO', 'PGP', 'ERA', 'EIST', 'AD', 'RNVS', 'THEO', 'DS', 'DWT', 'NumProg', 'LinAlg', 'Analysis'), $e['SUMMARY']);
 	$e['SUMMARY']=str_replace(array('Standardgruppe', 'PR, ','VO, '), '', $e['SUMMARY']);
 	
 	//Try to make sense out of the location
 	if(!empty($e['LOCATION'])){
-		if(strpos($e['LOCATION'],'(5609')!==false){ 
+		if(strpos($e['LOCATION'],'(56')!==false){ 
 			// Informatik
 			switchLocation($e,'Boltzmannstraße 3, 85748 Garching bei München');
-		}else if(strpos($e['LOCATION'],'(8102')!==false){ 
+		} else if(strpos($e['LOCATION'],'(81')!==false){ 
+			// Maschbau
+			switchLocation($e,'Boltzmannstraße 15, 85748 Garching bei München');
+		} else if(strpos($e['LOCATION'],'(81')!==false){ 
 			// Hochbrück
 			switchLocation($e,'Parkring 11-13, 85748 Garching bei München');
-		} else if(strpos($e['LOCATION'],'(5101')!==false){ 
+		} else if(strpos($e['LOCATION'],'(51')!==false){ 
 			// Physik
 			switchLocation($e,'James-Franck-Straße 1, 85748 Garching bei München');
 		} 
@@ -160,3 +161,5 @@ if(!isset($_GET['debug'])){
 	header('Content-Disposition: attachment; filename="cal.ics"');
 	echo $cal->render();
 }
+
+?>
