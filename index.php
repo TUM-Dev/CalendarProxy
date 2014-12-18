@@ -52,11 +52,29 @@ function cleanEvent(&$e){
 	//Remove the TAG and anything after e.g.: (IN0001)
 	$e['SUMMARY'] = preg_replace("/(\\(IN[0-9]+\\)|\\[MA[0-9]+\\]).+/", '', $e['SUMMARY']);
 	
-	//Some common replacements for some stuff
-	$e['SUMMARY']=str_replace(
-	array('Tutorübungen', 'Grundlagen: ','Betriebssysteme und Systemsoftware', 'Einführung in die Informatik ', 'Praktikum: Grundlagen der Programmierung', 'Einführung in die Rechnerarchitektur (Einführung in die Technische Informatik)', 'Einführung in die Softwaretechnik', 'Algorithmen und Datenstrukturen', 'Rechnernetze und Verteilte Systeme', 'Einfürhung in die Theoretische Informatik', 'Diskrete Strukturen', 'Diskrete Wahrscheinlichkeitstheorie', 'Numerisches Programmieren', 'Lineare Algebra für Informatik', 'Analysis für Informatik'), 
-	array('TÜ','G','BS','INFO', 'PGP', 'ERA', 'EIST', 'AD', 'RNVS', 'THEO', 'DS', 'DWT', 'NumProg', 'LinAlg', 'Analysis'), $e['SUMMARY']);
-	$e['SUMMARY']=str_replace(array('Standardgruppe', 'PR, ','VO, '), '', $e['SUMMARY']);
+	//Some common replacements: yes its a long list
+	$searchReplace = array();
+	$searchReplace[] = 'Tutorübungen' => 'TÜ';
+	$searchReplace[] = 'Grundlagen' => 'G';
+	$searchReplace[] = 'Betriebssysteme und Systemsoftware' => 'BS';
+	$searchReplace[] = 'Einführung in die Informatik ' => 'INFO';
+	$searchReplace[] = 'Praktikum: Grundlagen der Programmierung' => 'PGP';
+	$searchReplace[] = 'Einführung in die Rechnerarchitektur (Einführung in die Technische Informatik)' => 'ERA';
+	$searchReplace[] = 'Einführung in die Softwaretechnik' => 'EIST';
+	$searchReplace[] = 'Algorithmen und Datenstrukturen' => 'AD';
+	$searchReplace[] = 'Rechnernetze und Verteilte Systeme' => 'RNVS';
+	$searchReplace[] = 'Einfürhung in die Theoretische Informatik' => 'THEO';
+	$searchReplace[] = 'Diskrete Strukturen' => 'DS';
+	$searchReplace[] = 'Diskrete Wahrscheinlichkeitstheorie' => 'DWT';
+	$searchReplace[] = 'Numerisches Programmieren' => 'NumProg';
+	$searchReplace[] = 'Lineare Algebra für Informatik' => 'LinAlg';
+	$searchReplace[] = 'Analysis für Informatik' => 'Analysis';
+	
+	//Do the replacement
+	$e['SUMMARY'] = strtr($e['SUMMARY'], $searchReplace);
+	
+	//Remove some stuff which is not really needed
+	$e['SUMMARY'] = str_replace(array('Standardgruppe', 'PR, ','VO, '), '', $e['SUMMARY']);
 	
 	//Try to make sense out of the location
 	if(!empty($e['LOCATION'])){
