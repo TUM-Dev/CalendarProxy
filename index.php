@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require 'vendor/autoload.php';
 
@@ -15,7 +15,9 @@ if(isset($_GET['debug'])){
 }
 
 //Make sure php is using utf as well as the output is recognized as utf8
-header('Content-Type: text/html; charset=UTF-8');
+if(isset($_GET['debug'])){
+	header('Content-Type: text/html; charset=UTF-8');
+}
 mb_internal_encoding('UTF-8');
 
 /*
