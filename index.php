@@ -61,7 +61,7 @@ function cleanEvent(&$e){
 		if(strpos($e['LOCATION'],'(56')!==false){ 
 			// Informatik
 			switchLocation($e,'Boltzmannstraße 3, 85748 Garching bei München');
-		} else if(strpos($e['LOCATION'],'(81')!==false){ 
+		} else if(strpos($e['LOCATION'],'(55')!==false){ 
 			// Maschbau
 			switchLocation($e,'Boltzmannstraße 15, 85748 Garching bei München');
 		} else if(strpos($e['LOCATION'],'(81')!==false){ 
