@@ -15,9 +15,7 @@ if(isset($_GET['debug'])){
 }
 
 //Make sure php is using utf as well as the output is recognized as utf8
-if(isset($_GET['debug'])){ //Only output as HTML when debugging
-	header('Content-Type: text/html; charset=UTF-8');
-}
+header('Content-Type: text/html; charset=UTF-8');
 mb_internal_encoding('UTF-8');
 
 /*
@@ -74,7 +72,7 @@ function cleanEvent(&$e){
 	$e['SUMMARY'] = strtr($e['SUMMARY'], $searchReplace);
 	
 	//Remove some stuff which is not really needed
-	$e['SUMMARY'] = str_replace(array('Standardgruppe', 'PR, ','VO, '), '', $e['SUMMARY']);
+	$e['SUMMARY'] = str_replace(array('Standardgruppe', 'PR, ','VO, ', 'FA, '), '', $e['SUMMARY']);
 	
 	//Try to make sense out of the location
 	if(!empty($e['LOCATION'])){
@@ -118,10 +116,54 @@ function switchLocation(&$e,$newLoc){
 }
 
 /*
+ * Remove duplicate entries: events that happen at the same time in multiple locations 
+ */
+function noDupes(&$events){
+	//Sort them
+	usort($events, function($a, $b){
+		if(strtotime($a['DTSTART']) > strtotime($b['DTSTART'])){
+			return 1;
+		}elseif($a['DTSTART'] > $b['DTSTART']){
+			return -1;
+		}
+		return 0;
+	});
+	
+	//Find dupes
+	$total=count($events);
+	$removeMe = array();
+	for($i=1;$i<$total;$i++){
+		//Check if start time, end time and title match then merge
+		if($events[$i-1]['DTSTART']===$events[$i]['DTSTART'] && $events[$i-1]['DTEND']===$events[$i]['DTEND'] && $events[$i-1]['SUMMARY']===$events[$i]['SUMMARY']){
+			//Append the location to the next (same) element
+			$events[$i]['LOCATION'] .= "\n" . $events[$i-1]['LOCATION'];
+			
+			//Mark this element for removal
+			$removeMe[] = $events[$i-1];
+		}
+	}
+	
+	//Remove the marked for deletion elements
+	return array_udiff($events, $removeMe, function($a,$b){
+		//Are the uids equal?
+		return strcmp($a['UID'], $b['UID']);
+	});
+}
+
+
+/*
  * Debugging function to dump the data to the browser
  */
 function dumpMe($arr, $echo=true) {
+	// Don't output if we are not in debug mode
+	if(!isset($_GET['debug'])){
+		return; 
+	}
+	
+	//Assemble the string 
     $str=str_replace(array("\n", ' '), array('<br/>', '&nbsp;'), print_r($arr, true)) . '<br/>';
+	
+	//Output based on the second param
     if($echo) {
         echo $str;
     }else{
@@ -136,14 +178,17 @@ if(!isset($_GET['pStud'],$_GET['pToken'])){
 }
 
 //Parse the file
-$calAddr = 'https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=' . $_GET['pStud'].'&pToken='.$_GET['pToken'];
-$ical   = new ICal($calAddr);
-$allEvents=$ical->events();
+$calAddr 	= 'https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=' . $_GET['pStud'].'&pToken='.$_GET['pToken'];
+$ical   	= new ICal($calAddr);
+$allEvents 	= $ical->events();
 
 //Check if anything was received
 if(empty($allEvents)){
 	die('Ihre parameter sind ung&uuml;ltig oder ein anderer Fehler ist aufgetreten');
 }
+
+//Remove dupes
+$allEvents = noDupes($allEvents);
 
 //Create new object for outputting the new calender
 $cal = new \Eluceo\iCal\Component\Calendar('TUM iCal Proxy');
@@ -154,9 +199,7 @@ foreach($allEvents as $e){
 	
 	//Process object
 	cleanEvent($e);
-	if(isset($_GET['debug'])){
-		dumpMe($e);
-	}	
+	dumpMe($e);
  
 	//Create new and save it
 	$vEvent
@@ -181,5 +224,3 @@ if(!isset($_GET['debug'])){
 	header('Content-Disposition: attachment; filename="cal.ics"');
 	echo $cal->render();
 }
-
-?>
