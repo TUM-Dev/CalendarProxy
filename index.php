@@ -2,7 +2,7 @@
 
 require 'vendor/autoload.php';
 
-//Comment this out to enable debugging
+//Secruity thingy: Comment this out to enable debugging
 unset($_GET['debug']);
 
 //Only output errors if debugging
@@ -19,7 +19,7 @@ header('Content-Type: text/html; charset=UTF-8');
 mb_internal_encoding('UTF-8');
 
 /*
- * Parse the event and do the replacement and optimizationsf
+ * Parse the event and do the replacement and optimizations
  */
 function cleanEvent(&$e){
 	//Add missing fields if possible
@@ -139,15 +139,9 @@ function noDupes(&$events){
 			$events[$i]['LOCATION'] .= "\n" . $events[$i-1]['LOCATION'];
 			
 			//Mark this element for removal
-			$removeMe[] = $events[$i-1];
+			unset($events[$i-1]);
 		}
 	}
-	
-	//Remove the marked for deletion elements
-	return array_udiff($events, $removeMe, function($a,$b){
-		//Are the uids equal?
-		return strcmp($a['UID'], $b['UID']);
-	});
 }
 
 
