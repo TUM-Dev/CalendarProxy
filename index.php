@@ -7,7 +7,7 @@ if (!preg_match('!/$!', $appPath)) {
 }
 
 //Store in constants
-define('APPLICATION_PATH', $appPath . './');
+define('APPLICATION_PATH', $appPath);
 define('PATH_HEADER', APPLICATION_PATH.'../header.html');
 define('PATH_FOOTER', APPLICATION_PATH.'../footer.html');
 define('PATH_ABOUT', APPLICATION_PATH.'about.html');
@@ -181,9 +181,9 @@ function dumpMe($arr, $echo=true) {
 //Verify if we have all parameters
 if(!isset($_GET['pStud'],$_GET['pToken'])){
 	if(file_exists(PATH_HEADER) && file_exists(PAGE_FOOTER)){
-		$page=file_get_contents(PATH_HEADER).str_replace('%HOST%',$_SERVER['HTTP_HOST'],file_get_contents(PATH_ABOUT)).file_get_contents(PAGE_FOOTER);
+		$page=file_get_contents(PATH_HEADER).str_replace('%HOST%',$_SERVER['SERVER_NAME'],file_get_contents(PATH_ABOUT)).file_get_contents(PAGE_FOOTER);
 	}else{
-		$page=str_replace('%HOST%',$_SERVER['HTTP_HOST'],file_get_contents(PATH_ABOUT));
+		$page=str_replace('%HOST%',$_SERVER['SERVER_NAME'],file_get_contents(PATH_ABOUT));
 	}
 	die($page);
 }
