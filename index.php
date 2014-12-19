@@ -19,7 +19,7 @@ header('Content-Type: text/html; charset=UTF-8');
 mb_internal_encoding('UTF-8');
 
 /*
- * Parse the event and do the replacement and optimizations
+ * Parse the event and do the replacement and optimizationsf
  */
 function cleanEvent(&$e){
 	//Add missing fields if possible
@@ -61,7 +61,7 @@ function cleanEvent(&$e){
 	$searchReplace['Einführung in die Softwaretechnik'] = 'EIST';
 	$searchReplace['Algorithmen und Datenstrukturen'] = 'AD';
 	$searchReplace['Rechnernetze und Verteilte Systeme'] = 'RNVS';
-	$searchReplace['Einfürhung in die Theoretische Informatik'] = 'THEO';
+	$searchReplace['Einführung in die Theoretische Informatik'] = 'THEO';
 	$searchReplace['Diskrete Strukturen'] = 'DS';
 	$searchReplace['Diskrete Wahrscheinlichkeitstheorie'] = 'DWT';
 	$searchReplace['Numerisches Programmieren'] = 'NumProg';
