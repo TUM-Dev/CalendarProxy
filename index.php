@@ -3,7 +3,7 @@
 //Global absolute path
 $appPath = realpath(dirname(__FILE__));
 if (!preg_match('!/$!', $appPath)) {
-    $appPath.= '/';
+    $appPath .= '/';
 }
 
 //Store in constants
@@ -147,7 +147,6 @@ function noDupes(&$events) {
 
     //Find dupes
     $total = count($events);
-    $removeMe = array();
     for ($i = 1; $i < $total; $i++) {
         //Check if start time, end time and title match then merge
         if ($events[$i - 1]['DTSTART'] === $events[$i]['DTSTART'] && $events[$i - 1]['DTEND'] === $events[$i]['DTEND'] && $events[$i - 1]['SUMMARY'] === $events[$i]['SUMMARY']) {
@@ -160,10 +159,21 @@ function noDupes(&$events) {
     }
 }
 
+/**
+ * Show a nice information overview page
+ */
+function showInfos(){
+    if (file_exists(PATH_HEADER) && file_exists(PAGE_FOOTER)) {
+        $page = file_get_contents(PATH_HEADER) . str_replace('%HOST%', $_SERVER['SERVER_NAME'], file_get_contents(PATH_ABOUT)) . file_get_contents(PAGE_FOOTER);
+    } else {
+        $page = str_replace('%HOST%', $_SERVER['SERVER_NAME'], file_get_contents(PATH_ABOUT));
+    }
+    die($page);
+}
+
 /*
  * Debugging function to dump the data to the browser
  */
-
 function dumpMe($arr, $echo = true) {
     // Don't output if we are not in debug mode
     if (!isset($_GET['debug'])) {
@@ -183,12 +193,7 @@ function dumpMe($arr, $echo = true) {
 
 //Verify if we have all parameters
 if (!isset($_GET['pStud'], $_GET['pToken'])) {
-    if (file_exists(PATH_HEADER) && file_exists(PAGE_FOOTER)) {
-        $page = file_get_contents(PATH_HEADER) . str_replace('%HOST%', $_SERVER['SERVER_NAME'], file_get_contents(PATH_ABOUT)) . file_get_contents(PAGE_FOOTER);
-    } else {
-        $page = str_replace('%HOST%', $_SERVER['SERVER_NAME'], file_get_contents(PATH_ABOUT));
-    }
-    die($page);
+    showInfos();
 }
 
 //Parse the file
