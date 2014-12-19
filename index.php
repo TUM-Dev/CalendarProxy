@@ -163,8 +163,8 @@ function noDupes(&$events) {
  * Show a nice information overview page
  */
 function showInfos(){
-    if (file_exists(PATH_HEADER) && file_exists(PAGE_FOOTER)) {
-        $page = file_get_contents(PATH_HEADER) . str_replace('%HOST%', $_SERVER['SERVER_NAME'], file_get_contents(PATH_ABOUT)) . file_get_contents(PAGE_FOOTER);
+    if (file_exists(PATH_HEADER) && file_exists(PATH_FOOTER)) {
+        $page = file_get_contents(PATH_HEADER) . str_replace('%HOST%', $_SERVER['SERVER_NAME'], file_get_contents(PATH_ABOUT)) . file_get_contents(PATH_FOOTER);
     } else {
         $page = str_replace('%HOST%', $_SERVER['SERVER_NAME'], file_get_contents(PATH_ABOUT));
     }
