@@ -1,6 +1,19 @@
 <?php
 
-require 'vendor/autoload.php';
+//Global absolute path
+$appPath = realpath(dirname(__FILE__));
+if (!preg_match('!/$!', $appPath)) {
+    $appPath.= '/';
+}
+
+//Store in constants
+define('APPLICATION_PATH', $appPath . './');
+define('PATH_HEADER', APPLICATION_PATH.'../header.html');
+define('PATH_FOOTER', APPLICATION_PATH.'../footer.html');
+define('PATH_ABOUT', APPLICATION_PATH.'about.html');
+
+//Include composer components
+require $appPath.'vendor/autoload.php';
 
 //Secruity thingy: Comment this out to enable debugging
 unset($_GET['debug']);
@@ -167,7 +180,11 @@ function dumpMe($arr, $echo=true) {
 
 //Verify if we have all parameters
 if(!isset($_GET['pStud'],$_GET['pToken'])){
-	$page=file_get_contents('about.html');
+	if(file_exists(PATH_HEADER) && file_exists(PAGE_FOOTER)){
+		$page=file_get_contents(PATH_HEADER).file_get_contents(PATH_ABOUT).file_get_contents(PAGE_FOOTER);
+	}else{
+		$page=file_get_contents(PATH_ABOUT);
+	}
 	die($page);
 }
 
