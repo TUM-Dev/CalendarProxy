@@ -159,6 +159,7 @@ function noDupes(&$events) {
     }
 }
 
+
 /**
  * Show a nice information overview page
  */
