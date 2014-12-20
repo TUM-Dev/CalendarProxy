@@ -159,7 +159,6 @@ function noDupes(&$events) {
     }
 }
 
-
 /**
  * Show a nice information overview page
  */
@@ -208,7 +207,7 @@ if (empty($allEvents)) {
 }
 
 //Remove dupes
-$allEvents = noDupes($allEvents);
+noDupes($allEvents);
 
 //Create new object for outputting the new calender
 $cal = new \Eluceo\iCal\Component\Calendar('TUM iCal Proxy');
