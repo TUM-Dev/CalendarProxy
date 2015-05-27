@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <?php
 
 //Global absolute path
@@ -12,6 +11,9 @@ define('APPLICATION_PATH', $appPath);
 define('PATH_HEADER', APPLICATION_PATH . '../header.html');
 define('PATH_FOOTER', APPLICATION_PATH . '../footer.html');
 define('PATH_ABOUT', APPLICATION_PATH . 'about.html');
+
+//Setup Timezone
+date_default_timezone_set('Europe/Berlin');
 
 //Include composer components
 require $appPath . 'vendor/autoload.php';
