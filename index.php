@@ -85,7 +85,9 @@ function cleanEvent(&$e) {
     $searchReplace['Numerisches Programmieren'] = 'NumProg';
     $searchReplace['Lineare Algebra für Informatik'] = 'LinAlg';
     $searchReplace['Analysis für Informatik'] = 'Analysis';
-
+    $searchReplace['Künstlichen Intelligenz'] = 'KI';
+    $searchReplace['Advanced Topics of Software Engineering'] = 'ASE';
+    
     //Do the replacement
     $e['SUMMARY'] = strtr($e['SUMMARY'], $searchReplace);
 
