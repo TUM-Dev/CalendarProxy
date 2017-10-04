@@ -170,7 +170,7 @@ function noDupes(&$events) {
  */
 function showInfos(){
     if (file_exists(PATH_HEADER) && file_exists(PATH_FOOTER)) {
-        $page = file_get_contents(PATH_HEADER) . str_replace('%HOST%', $_SERVER['SERVER_NAME'], file_get_contents(PATH_ABOUT)) . file_get_contents(PATH_FOOTER);
+        $page = file_get_contents(PATH_HEADER) . str_replace('%HOST%', $_SERVER['SERVER_NAME'].'/'.basename(__DIR__) , file_get_contents(PATH_ABOUT)) . file_get_contents(PATH_FOOTER);
     } else {
         $page = str_replace('%HOST%', $_SERVER['SERVER_NAME'], file_get_contents(PATH_ABOUT));
     }
