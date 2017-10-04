@@ -87,6 +87,7 @@ function cleanEvent(&$e) {
     $searchReplace['Analysis für Informatik'] = 'Analysis';
     $searchReplace['Künstlichen Intelligenz'] = 'KI';
     $searchReplace['Advanced Topics of Software Engineering'] = 'ASE';
+    $searchReplace['Praktikum - iPraktikum, iOS Praktikum'] = 'iPraktikum';
     
     //Do the replacement
     $e['SUMMARY'] = strtr($e['SUMMARY'], $searchReplace);
