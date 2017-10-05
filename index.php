@@ -85,7 +85,7 @@ function cleanEvent(&$e) {
     $searchReplace['Numerisches Programmieren'] = 'NumProg';
     $searchReplace['Lineare Algebra für Informatik'] = 'LinAlg';
     $searchReplace['Analysis für Informatik'] = 'Analysis';
-    $searchReplace['Künstlichen Intelligenz'] = 'KI';
+    $searchReplace[' der Künstlichen Intelligenz'] = 'KI';
     $searchReplace['Advanced Topics of Software Engineering'] = 'ASE';
     $searchReplace['Praktikum - iPraktikum, iOS Praktikum'] = 'iPraktikum';
     
