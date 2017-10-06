@@ -65,7 +65,7 @@ function cleanEvent(&$e) {
     $e['DESCRIPTION'] = $e['SUMMARY'] . "\n" . $e['DESCRIPTION'];
 
     //Remove the TAG and anything after e.g.: (IN0001)
-    $e['SUMMARY'] = preg_replace("/(\\(IN[0-9]+\\)|\\[MA[0-9]+\\]).+/", '', $e['SUMMARY']);
+    $e['SUMMARY'] = preg_replace('/(\((IN|MA)[0-9]+,?\s?\)*).+/', '', $e['SUMMARY']);
 
     //Some common replacements: yes its a long list
     $searchReplace = array();
