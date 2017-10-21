@@ -11,9 +11,10 @@ define('APPLICATION_PATH', $appPath);
 define('PATH_HEADER', APPLICATION_PATH . '../header.html');
 define('PATH_FOOTER', APPLICATION_PATH . '../footer.html');
 define('PATH_ABOUT', APPLICATION_PATH . 'about.html');
+define('TIMEZONE', 'Europe/Berlin');
 
 //Setup Timezone
-date_default_timezone_set('Europe/Berlin');
+date_default_timezone_set(TIMEZONE);
 
 //Include composer components
 require $appPath . 'vendor/autoload.php';
@@ -218,7 +219,7 @@ noDupes($allEvents);
 
 //Create new object for outputting the new calender
 $cal = new \Eluceo\iCal\Component\Calendar('TUM iCal Proxy');
-
+$cal->setTimezone(new \Eluceo\iCal\Component\Timezone(TIMEZONE));
 //Event loop
 foreach ($allEvents as $e) {
     $vEvent = new \Eluceo\iCal\Component\Event();
