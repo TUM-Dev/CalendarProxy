@@ -14,6 +14,7 @@ define('PATH_ABOUT', APPLICATION_PATH . 'about.html');
 define('TIMEZONE', 'Europe/Berlin');
 
 //Setup Timezone
+$defaultTimeZone = new \DateTimeZone(TIMEZONE);
 date_default_timezone_set(TIMEZONE);
 
 //Include composer components
