@@ -241,7 +241,7 @@ foreach ($allEvents as $e) {
             ->setDtEnd(new \DateTime($e['DTEND']))
             ->setLocation($e['LOCATION'], $e['LOCATIONTITLE'], $e['GEO']);
 
-    $cal->addEvent($vEvent);
+    $cal->addComponent($vEvent);
 }
 
 
