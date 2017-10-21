@@ -230,7 +230,6 @@ foreach ($allEvents as $e) {
 
     //Create new and save it
     $vEvent
-            ->setUseTimezone(true) // Use server timezone
             ->setUniqueId($e['UID'])
             ->setDtStamp(new \DateTime($e['DTSTAMP']))
             ->setStatus($e['STATUS'])
