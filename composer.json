@@ -1,6 +1,14 @@
 {
-    "require": {
-        "eluceo/ical": "0.6.*",
-		"johngrogg/ics-parser": "dev-master"
+  "require": {
+    "eluceo/ical": "0.6.*",
+    "johngrogg/ics-parser": "dev-master"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "6.*.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "CalProxy\\": "./"
     }
+  }
 }

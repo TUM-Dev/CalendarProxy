@@ -1,5 +1,7 @@
 <?php
 
+use ICal\ICal;
+
 //Global absolute path
 $appPath = realpath(dirname(__FILE__));
 if (!preg_match('!/$!', $appPath)) {
@@ -36,179 +38,26 @@ if (isset($_GET['debug'])) {
 header('Content-Type: text/html; charset=UTF-8');
 mb_internal_encoding('UTF-8');
 
-/*
- * Parse the event and do the replacement and optimizations
- */
-
-function cleanEvent(&$e) {
-    //Add missing fields if possible
-    if (!isset($e['GEO'])) {
-        $e['GEO'] = '';
-    }
-    if (!isset($e['LOCATION'])) {
-        $e['LOCATION'] = '';
-    }
-    if (!isset($e['LOCATIONTITLE'])) {
-        $e['LOCATIONTITLE'] = '';
-    }
-    if (!isset($e['URL'])) {
-        $e['URL'] = '';
-    }
-    if (!isset($e['DESCRIPTION'])) {
-        $e['DESCRIPTION'] = '';
-    }
-
-    //Strip added slashes by the parser
-    $e['SUMMARY'] = stripcslashes($e['SUMMARY']);
-    $e['DESCRIPTION'] = stripcslashes($e['DESCRIPTION']);
-    $e['LOCATION'] = stripcslashes($e['LOCATION']);
-
-    //Remember the old title in the description
-    $e['DESCRIPTION'] = $e['SUMMARY'] . "\n" . $e['DESCRIPTION'];
-
-    //Remove the TAG and anything after e.g.: (IN0001)
-    $e['SUMMARY'] = preg_replace('/(\((IN|MA)[0-9]+,?\s?\)*).+/', '', $e['SUMMARY']);
-
-    //Some common replacements: yes its a long list
-    $searchReplace = array();
-    $searchReplace['Tutorübungen'] = 'TÜ';
-    $searchReplace['Grundlagen'] = 'G';
-    $searchReplace['Datenbanken'] = 'DB';
-    $searchReplace['Betriebssysteme und Systemsoftware'] = 'BS';
-    $searchReplace['Einführung in die Informatik '] = 'INFO';
-    $searchReplace['Praktikum: Grundlagen der Programmierung'] = 'PGP';
-    $searchReplace['Einführung in die Rechnerarchitektur'] = 'ERA';
-    $searchReplace['Einführung in die Softwaretechnik'] = 'EIST';
-    $searchReplace['Algorithmen und Datenstrukturen'] = 'AD';
-    $searchReplace['Rechnernetze und Verteilte Systeme'] = 'RNVS';
-    $searchReplace['Einführung in die Theoretische Informatik'] = 'THEO';
-    $searchReplace['Diskrete Strukturen'] = 'DS';
-    $searchReplace['Diskrete Wahrscheinlichkeitstheorie'] = 'DWT';
-    $searchReplace['Numerisches Programmieren'] = 'NumProg';
-    $searchReplace['Lineare Algebra für Informatik'] = 'LinAlg';
-    $searchReplace['Analysis für Informatik'] = 'Analysis';
-    $searchReplace[' der Künstlichen Intelligenz'] = 'KI';
-    $searchReplace['Advanced Topics of Software Engineering'] = 'ASE';
-    $searchReplace['Praktikum - iPraktikum, iOS Praktikum'] = 'iPraktikum';
-    
-    //Do the replacement
-    $e['SUMMARY'] = strtr($e['SUMMARY'], $searchReplace);
-
-    //Remove some stuff which is not really needed
-    $e['SUMMARY'] = str_replace(array('Standardgruppe', 'PR, ', 'VO, ', 'FA, '), '', $e['SUMMARY']);
-
-    //Try to make sense out of the location
-    if (!empty($e['LOCATION'])) {
-        if (strpos($e['LOCATION'], '(56') !== false) {
-            // Informatik
-            switchLocation($e, 'Boltzmannstraße 3, 85748 Garching bei München');
-        } else if (strpos($e['LOCATION'], '(55') !== false) {
-            // Maschbau
-            switchLocation($e, 'Boltzmannstraße 15, 85748 Garching bei München');
-        } else if (strpos($e['LOCATION'], '(81') !== false) {
-            // Hochbrück
-            switchLocation($e, 'Parkring 11-13, 85748 Garching bei München');
-        } else if (strpos($e['LOCATION'], '(51') !== false) {
-            // Physik
-            switchLocation($e, 'James-Franck-Straße 1, 85748 Garching bei München');
-        }
-    }
-
-    //Check status
-    switch ($e['STATUS']) {
-        default:
-        case 'CONFIRMED':
-            $e['STATUS'] = \Eluceo\iCal\Component\Event::STATUS_CONFIRMED;
-            break;
-        case 'CANCELLED':
-            $e['STATUS'] = \Eluceo\iCal\Component\Event::STATUS_CANCELLED;
-            break;
-        case 'TENTATIVE':
-            $e['STATUS'] = \Eluceo\iCal\Component\Event::STATUS_TENTATIVE;
-            break;
-    }
-}
-
-/*
- * Update the location field
- */
-
-function switchLocation(&$e, $newLoc) {
-    $e['DESCRIPTION'] = $e['LOCATION'] . "\n" . $e['DESCRIPTION'];
-    $e['LOCATIONTITLE'] = $e['LOCATION'];
-    $e['LOCATION'] = $newLoc;
-}
-
-/*
- * Remove duplicate entries: events that happen at the same time in multiple locations 
- */
-
-function noDupes(&$events) {
-    //Sort them
-    usort($events, function($a, $b) {
-        if (strtotime($a['DTSTART']) > strtotime($b['DTSTART'])) {
-            return 1;
-        } elseif ($a['DTSTART'] > $b['DTSTART']) {
-            return -1;
-        }
-        return 0;
-    });
-
-    //Find dupes
-    $total = count($events);
-    for ($i = 1; $i < $total; $i++) {
-        //Check if start time, end time and title match then merge
-        if ($events[$i - 1]['DTSTART'] === $events[$i]['DTSTART'] && $events[$i - 1]['DTEND'] === $events[$i]['DTEND'] && $events[$i - 1]['SUMMARY'] === $events[$i]['SUMMARY']) {
-            //Append the location to the next (same) element
-            $events[$i]['LOCATION'] .= "\n" . $events[$i - 1]['LOCATION'];
-
-            //Mark this element for removal
-            unset($events[$i - 1]);
-        }
-    }
-}
 
 /**
- * Show a nice information overview page
+ * Show a nice information overview page, if the parameters are not set
+ * Also catch ppl trying to inject something over the parameters.
  */
-function showInfos(){
+if (!isset($_GET['pStud'], $_GET['pToken']) || !ctype_alnum($_GET['pStud']) || !ctype_alnum($_GET['pToken'])) {
     if (file_exists(PATH_HEADER) && file_exists(PATH_FOOTER)) {
-        $page = file_get_contents(PATH_HEADER) . str_replace('%HOST%', $_SERVER['SERVER_NAME'].'/'.basename(__DIR__) , file_get_contents(PATH_ABOUT)) . file_get_contents(PATH_FOOTER);
+        $page = file_get_contents(PATH_HEADER) . str_replace('%HOST%', $_SERVER['SERVER_NAME'] . '/' . basename(__DIR__), file_get_contents(PATH_ABOUT)) . file_get_contents(PATH_FOOTER);
     } else {
         $page = str_replace('%HOST%', $_SERVER['SERVER_NAME'], file_get_contents(PATH_ABOUT));
     }
     die($page);
 }
 
-/*
- * Debugging function to dump the data to the browser
+/**
+ * Parse the file
  */
-function dumpMe($arr, $echo = true) {
-    // Don't output if we are not in debug mode
-    if (!isset($_GET['debug'])) {
-        return;
-    }
-
-    //Assemble the string 
-    $str = str_replace(array("\n", ' '), array('<br/>', '&nbsp;'), print_r($arr, true)) . '<br/>';
-
-    //Output based on the second param
-    if ($echo) {
-        echo $str;
-    } else {
-        return $str;
-    }
-}
-
-//Verify if we have all parameters
-if (!isset($_GET['pStud'], $_GET['pToken'])) {
-    showInfos();
-}
-
-//Parse the file
-$calAddr = 'https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=' . $_GET['pStud'] . '&pToken=' . $_GET['pToken'];
-$ical = new ICal($calAddr);
-$allEvents = $ical->events();
+$calAddress = 'https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=' . $_GET['pStud'] . '&pToken=' . $_GET['pToken'];
+$iCal = new ICal($calAddress);
+$allEvents = $iCal->events();
 
 //Check if anything was received
 if (empty($allEvents)) {
@@ -216,7 +65,7 @@ if (empty($allEvents)) {
 }
 
 //Remove dupes
-noDupes($allEvents);
+CalProxy\handler::noDupes($allEvents);
 
 //Create new object for outputting the new calender
 $cal = new \Eluceo\iCal\Component\Calendar('TUM iCal Proxy');
@@ -226,20 +75,18 @@ foreach ($allEvents as $e) {
     $vEvent = new \Eluceo\iCal\Component\Event();
 
     //Process object
-    cleanEvent($e);
-    dumpMe($e);
+    CalProxy\handler::cleanEvent($e);
 
     //Create new and save it
-    $vEvent
-            ->setUniqueId($e['UID'])
-            ->setDtStamp(new \DateTime($e['DTSTAMP']))
-            ->setStatus($e['STATUS'])
-            ->setUrl($e['URL'])
-            ->setSummary($e['SUMMARY'])
-            ->setDescription($e['DESCRIPTION'])
-            ->setDtStart(new \DateTime($e['DTSTART']))
-            ->setDtEnd(new \DateTime($e['DTEND']))
-            ->setLocation($e['LOCATION'], $e['LOCATIONTITLE'], $e['GEO']);
+    $vEvent->setUniqueId($e['UID'])
+        ->setDtStamp(new \DateTime($e['DTSTAMP']))
+        ->setStatus($e['STATUS'])
+        ->setUrl($e['URL'])
+        ->setSummary($e['SUMMARY'])
+        ->setDescription($e['DESCRIPTION'])
+        ->setDtStart(new \DateTime($e['DTSTART']))
+        ->setDtEnd(new \DateTime($e['DTEND']))
+        ->setLocation($e['LOCATION'], $e['LOCATIONTITLE'], $e['GEO']);
 
     $cal->addComponent($vEvent);
 }
