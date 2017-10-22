@@ -71,23 +71,22 @@ class handler {
         }
 
         //Check status
-        switch ($e['STATUS']) {
+        switch ($e->status) {
             default:
             case 'CONFIRMED':
-                $e['STATUS'] = \Eluceo\iCal\Component\Event::STATUS_CONFIRMED;
+                $event->setStatus(\Eluceo\iCal\Component\Event::STATUS_CONFIRMED);
                 break;
             case 'CANCELLED':
-                $e['STATUS'] = \Eluceo\iCal\Component\Event::STATUS_CANCELLED;
+                $event->setStatus(\Eluceo\iCal\Component\Event::STATUS_CANCELLED);
                 break;
             case 'TENTATIVE':
-                $e['STATUS'] = \Eluceo\iCal\Component\Event::STATUS_TENTATIVE;
+                $event->setStatus(\Eluceo\iCal\Component\Event::STATUS_TENTATIVE);
                 break;
         }
 
         //Add all fields
         $event->setUniqueId($e->uid)
             ->setDtStamp(new \DateTime($e->dtstamp))
-            ->setStatus($e->status)
             //->setUrl($e->)
             ->setSummary($summary)
             ->setDtStart(new \DateTime($e->dtstart))
