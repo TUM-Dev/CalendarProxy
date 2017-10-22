@@ -70,25 +70,10 @@ CalProxy\handler::noDupes($allEvents);
 //Create new object for outputting the new calender
 $cal = new \Eluceo\iCal\Component\Calendar('TUM iCal Proxy');
 $cal->setTimezone(new \Eluceo\iCal\Component\Timezone(TIMEZONE));
+
 //Event loop
 foreach ($allEvents as $e) {
-    $vEvent = new \Eluceo\iCal\Component\Event();
-
-    //Process object
-    CalProxy\handler::cleanEvent($e);
-
-    //Create new and save it
-    $vEvent->setUniqueId($e['UID'])
-        ->setDtStamp(new \DateTime($e['DTSTAMP']))
-        ->setStatus($e['STATUS'])
-        ->setUrl($e['URL'])
-        ->setSummary($e['SUMMARY'])
-        ->setDescription($e['DESCRIPTION'])
-        ->setDtStart(new \DateTime($e['DTSTART']))
-        ->setDtEnd(new \DateTime($e['DTEND']))
-        ->setLocation($e['LOCATION'], $e['LOCATIONTITLE'], $e['GEO']);
-
-    $cal->addComponent($vEvent);
+    $cal->addComponent(CalProxy\handler::cleanEvent($e));
 }
 
 

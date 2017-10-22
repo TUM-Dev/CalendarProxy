@@ -2,17 +2,18 @@
 
 namespace CalProxy;
 
+use ICal\Event;
+
 class handler {
 
     /**
      * Parse the event and do the replacement and optimizations
-     * @param $e array a single ical event that should be cleaned up
+     * @param $e Event a single ical event that should be cleaned up
      */
-    public static function cleanEvent(&$e) {
+    public static function cleanEvent(Event &$e) {
+        $event = new \Eluceo\iCal\Component\Event();
+
         //Add missing fields if possible
-        if (!isset($e['GEO'])) {
-            $e['GEO'] = '';
-        }
         if (!isset($e['LOCATION'])) {
             $e['LOCATION'] = '';
         }
@@ -27,15 +28,16 @@ class handler {
         }
 
         //Strip added slashes by the parser
-        $e['SUMMARY'] = stripcslashes($e['SUMMARY']);
-        $e['DESCRIPTION'] = stripcslashes($e['DESCRIPTION']);
-        $e['LOCATION'] = stripcslashes($e['LOCATION']);
+        $summary = stripcslashes($e->summary);
+        $description = stripcslashes($e->description);
+        $location = stripcslashes($e->location);
 
         //Remember the old title in the description
-        $e['DESCRIPTION'] = $e['SUMMARY'] . "\n" . $e['DESCRIPTION'];
+        $event->setDescription($summary . "\n" . $description);
+        $event->setLocation($location);
 
         //Remove the TAG and anything after e.g.: (IN0001)
-        $e['SUMMARY'] = preg_replace('/(\((IN|MA)[0-9]+,?\s?\)*).+/', '', $e['SUMMARY']);
+        $summary = preg_replace('/(\((IN|MA)[0-9]+,?\s?\)*).+/', '', $summary);
 
         //Some common replacements: yes its a long list
         $searchReplace = [];
@@ -60,25 +62,25 @@ class handler {
         $searchReplace['Praktikum - iPraktikum, iOS Praktikum'] = 'iPraktikum';
 
         //Do the replacement
-        $e['SUMMARY'] = strtr($e['SUMMARY'], $searchReplace);
+        $summary = strtr($summary, $searchReplace);
 
         //Remove some stuff which is not really needed
-        $e['SUMMARY'] = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, '], '', $e['SUMMARY']);
+        $summary = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, '], '', $summary);
 
         //Try to make sense out of the location
-        if (!empty($e['LOCATION'])) {
-            if (strpos($e['LOCATION'], '(56') !== false) {
+        if (!empty($location)) {
+            if (strpos($location, '(56') !== false) {
                 // Informatik
-                switchLocation($e, 'Boltzmannstraße 3, 85748 Garching bei München');
-            } else if (strpos($e['LOCATION'], '(55') !== false) {
+                self::switchLocation($event, $location, 'Boltzmannstraße 3, 85748 Garching bei München');
+            } else if (strpos($location, '(55') !== false) {
                 // Maschbau
-                switchLocation($e, 'Boltzmannstraße 15, 85748 Garching bei München');
-            } else if (strpos($e['LOCATION'], '(81') !== false) {
+                self::switchLocation($event, $location, 'Boltzmannstraße 15, 85748 Garching bei München');
+            } else if (strpos($location, '(81') !== false) {
                 // Hochbrück
-                switchLocation($e, 'Parkring 11-13, 85748 Garching bei München');
-            } else if (strpos($e['LOCATION'], '(51') !== false) {
+                self::switchLocation($event, $location, 'Parkring 11-13, 85748 Garching bei München');
+            } else if (strpos($location, '(51') !== false) {
                 // Physik
-                switchLocation($e, 'James-Franck-Straße 1, 85748 Garching bei München');
+                self::switchLocation($event, $location, 'James-Franck-Straße 1, 85748 Garching bei München');
             }
         }
 
@@ -95,6 +97,17 @@ class handler {
                 $e['STATUS'] = \Eluceo\iCal\Component\Event::STATUS_TENTATIVE;
                 break;
         }
+
+        //Add all fields
+        $event->setUniqueId($e->uid)
+            ->setDtStamp(new \DateTime($e->dtstamp))
+            ->setStatus($e->status)
+            //->setUrl($e->)
+            ->setSummary($summary)
+            ->setDtStart(new \DateTime($e->dtstart))
+            ->setDtEnd(new \DateTime($e->dtend));
+
+        return $event;
     }
 
 
@@ -104,22 +117,21 @@ class handler {
      * @param $e array element to be edited
      * @param $newLoc string new location that should be set to the element
      */
-    public static function switchLocation(&$e, $newLoc) {
-        $e['DESCRIPTION'] = $e['LOCATION'] . "\n" . $e['DESCRIPTION'];
-        $e['LOCATIONTITLE'] = $e['LOCATION'];
-        $e['LOCATION'] = $newLoc;
+    public static function switchLocation(\Eluceo\iCal\Component\Event &$e, $oldLocation, $newLoc) {
+        $e->setDescription($oldLocation . "\n" . $e->getDescription());
+        $e->setLocation($newLoc, $oldLocation);
     }
 
     /**
      * Remove duplicate entries: events that happen at the same time in multiple locations
      * @param $events
      */
-    public static function noDupes(&$events) {
+    public static function noDupes(array &$events) {
         //Sort them
-        usort($events, function ($a, $b) {
-            if (strtotime($a['DTSTART']) > strtotime($b['DTSTART'])) {
+        usort($events, function (Event $a, Event $b) {
+            if (strtotime($a->dtstart) > strtotime($b->dtstart)) {
                 return 1;
-            } else if ($a['DTSTART'] > $b['DTSTART']) {
+            } else if ($a->dtstart > $b->dtstart) {
                 return -1;
             }
 
@@ -130,11 +142,11 @@ class handler {
         $total = count($events);
         for ($i = 1; $i < $total; $i++) {
             //Check if start time, end time and title match then merge
-            if ($events[ $i - 1 ]['DTSTART'] === $events[ $i ]['DTSTART']
-                && $events[ $i - 1 ]['DTEND'] === $events[ $i ]['DTEND']
-                && $events[ $i - 1 ]['SUMMARY'] === $events[ $i ]['SUMMARY']) {
+            if ($events[ $i - 1 ]->dtstart === $events[ $i ]->dtstart
+                && $events[ $i - 1 ]->dtend === $events[ $i ]->dtend
+                && $events[ $i - 1 ]->summary === $events[ $i ]->summary) {
                 //Append the location to the next (same) element
-                $events[ $i ]['LOCATION'] .= "\n" . $events[ $i - 1 ]['LOCATION'];
+                $events[ $i ]->location .= "\n" . $events[ $i - 1 ]->location;
 
                 //Mark this element for removal
                 unset($events[ $i - 1 ]);
