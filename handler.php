@@ -13,20 +13,6 @@ class handler {
     public static function cleanEvent(Event &$e) {
         $event = new \Eluceo\iCal\Component\Event();
 
-        //Add missing fields if possible
-        if (!isset($e['LOCATION'])) {
-            $e['LOCATION'] = '';
-        }
-        if (!isset($e['LOCATIONTITLE'])) {
-            $e['LOCATIONTITLE'] = '';
-        }
-        if (!isset($e['URL'])) {
-            $e['URL'] = '';
-        }
-        if (!isset($e['DESCRIPTION'])) {
-            $e['DESCRIPTION'] = '';
-        }
-
         //Strip added slashes by the parser
         $summary = stripcslashes($e->summary);
         $description = stripcslashes($e->description);
