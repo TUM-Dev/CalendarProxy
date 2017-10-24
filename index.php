@@ -69,7 +69,34 @@ CalProxy\handler::noDupes($allEvents);
 
 //Create new object for outputting the new calender
 $cal = new \Eluceo\iCal\Component\Calendar('TUM iCal Proxy');
-$cal->setTimezone(new \Eluceo\iCal\Component\Timezone(TIMEZONE));
+
+// Create timezone rule object for Daylight Saving Time
+$vTimezoneRuleDst = new \Eluceo\iCal\Component\TimezoneRule(\Eluceo\iCal\Component\TimezoneRule::TYPE_DAYLIGHT);
+$vTimezoneRuleDst->setTzName('CEST');
+$vTimezoneRuleDst->setDtStart(new \DateTime('1981-03-29 02:00:00', $defaultTimeZone));
+$vTimezoneRuleDst->setTzOffsetFrom('+0100');
+$vTimezoneRuleDst->setTzOffsetTo('+0200');
+$dstRecurrenceRule = new \Eluceo\iCal\Property\Event\RecurrenceRule();
+$dstRecurrenceRule->setFreq(\Eluceo\iCal\Property\Event\RecurrenceRule::FREQ_YEARLY);
+$dstRecurrenceRule->setByMonth(3);
+$dstRecurrenceRule->setByDay('-1SU');
+$vTimezoneRuleDst->setRecurrenceRule($dstRecurrenceRule);
+// Create timezone rule object for Standard Time
+$vTimezoneRuleStd = new \Eluceo\iCal\Component\TimezoneRule(\Eluceo\iCal\Component\TimezoneRule::TYPE_STANDARD);
+$vTimezoneRuleStd->setTzName('CET');
+$vTimezoneRuleStd->setDtStart(new \DateTime('1996-10-27 03:00:00', $defaultTimeZone));
+$vTimezoneRuleStd->setTzOffsetFrom('+0200');
+$vTimezoneRuleStd->setTzOffsetTo('+0100');
+$stdRecurrenceRule = new \Eluceo\iCal\Property\Event\RecurrenceRule();
+$stdRecurrenceRule->setFreq(\Eluceo\iCal\Property\Event\RecurrenceRule::FREQ_YEARLY);
+$stdRecurrenceRule->setByMonth(10);
+$stdRecurrenceRule->setByDay('-1SU');
+$vTimezoneRuleStd->setRecurrenceRule($stdRecurrenceRule);
+// Create timezone definition and add rules
+$vTimezone = new \Eluceo\iCal\Component\Timezone(TIMEZONE);
+$vTimezone->addComponent($vTimezoneRuleDst);
+$vTimezone->addComponent($vTimezoneRuleStd);
+$cal->setTimezone($vTimezone);
 
 //Event loop
 foreach ($allEvents as $e) {
