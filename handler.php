@@ -22,14 +22,15 @@ class handler {
         $event->setDescription($summary . "\n" . $description);
         $event->setLocation($location);
 
-        //Remove the TAG and anything after e.g.: (IN0001)
-        $summary = preg_replace('/(\((IN|MA)[0-9]+,?\s?\)*).+/', '', $summary);
+        //Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
+        $summary = preg_replace('/([\(\[](?:(?:IN|MA)\d+,?\s?)+[\)\]]).+/', '', $summary);
 
         //Some common replacements: yes its a long list
         $searchReplace = [];
         $searchReplace['Tutorübungen'] = 'TÜ';
         $searchReplace['Grundlagen'] = 'G';
         $searchReplace['Datenbanken'] = 'DB';
+        $searchReplace['Zentralübung'] = 'ZÜ';
         $searchReplace['Betriebssysteme und Systemsoftware'] = 'BS';
         $searchReplace['Einführung in die Informatik '] = 'INFO';
         $searchReplace['Praktikum: Grundlagen der Programmierung'] = 'PGP';
@@ -51,7 +52,7 @@ class handler {
         $summary = strtr($summary, $searchReplace);
 
         //Remove some stuff which is not really needed
-        $summary = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, '], '', $summary);
+        $summary = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, ', 'VI, ', 'TT, ', 'UE, '], '', $summary);
 
         //Try to make sense out of the location
         if (!empty($location)) {
