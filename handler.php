@@ -33,7 +33,7 @@ class handler {
         $searchReplace['Zentralübung'] = 'ZÜ';
         $searchReplace['Vertiefungsübungen'] = 'VÜ';
         $searchReplace['Übungen'] = 'Ü';
-        $searchReplace['Mathematische Behandlung der Natur- und Wirtschaftswissenschaften'] = 'MBNW';
+        $searchReplace['Mathematische Behandlung der Natur- und Wirtschaftswissenschaften (Mathematik 1)'] = 'MBNW';
         $searchReplace['Einführung in die Wirtschaftsinformatik'] = 'WINFO';
         $searchReplace['Betriebssysteme und Systemsoftware'] = 'BS';
         $searchReplace['Einführung in die Informatik '] = 'INFO';
@@ -60,22 +60,22 @@ class handler {
 
         //Try to make sense out of the location
         if (!empty($location)) {
-            if (preg_match('56\d{2}\.((EG)|\d{2})\.\d+', $location)===1) {
+            if (preg_match('/56\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // Informatik
                 self::switchLocation($event, $location, 'Boltzmannstraße 3, 85748 Garching bei München');
-            } else if (preg_match('55\d{2}\.((EG)|\d{2})\.\d+', $location)===1) {
+            } else if (preg_match('/55\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // Maschbau
                 self::switchLocation($event, $location, 'Boltzmannstraße 15, 85748 Garching bei München');
-            } else if (preg_match('81\d{2}\.((EG)|\d{2})\.\d+', $location)===1) {
+            } else if (preg_match('/81\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // Hochbrück
                 self::switchLocation($event, $location, 'Parkring 11-13, 85748 Garching bei München');
-            } else if (preg_match('51\d{2}\.((EG)|\d{2})\.\d+', $location)===1) {
+            } else if (preg_match('/51\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // Physik
                 self::switchLocation($event, $location, 'James-Franck-Straße 1, 85748 Garching bei München');
-            } else if (preg_match('05\d{2}\.((EG)|\d{2})\.\d+', $location)===1) {
+            } else if (preg_match('/05\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // TUM Campus Innenstadt
                 self::switchLocation($event, $location, 'Arcisstraße 21, 80333 München');
-            } else if (preg_match('01\d{2}\.((EG)|\d{2})\.\d+', $location)===1) {
+            } else if (preg_match('/01\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // TUM Innenstadt Nordbau
                 self::switchLocation($event, $location, 'Theresienstraße 90, 80333 München');
             }
