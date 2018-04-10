@@ -66,9 +66,12 @@ class handler {
             } else if (preg_match('/55\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // Maschbau
                 self::switchLocation($event, $location, 'Boltzmannstraße 15, 85748 Garching bei München');
-            } else if (preg_match('/81\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
-                // Hochbrück
+            } else if (preg_match('/8101\.((EG)|\d{2})\.\d+/', $location)===1) {
+                // Hochbrück - Physics
                 self::switchLocation($event, $location, 'Parkring 11-13, 85748 Garching bei München');
+            } else if (preg_match('/8102\.((EG)|\d{2})\.\d+/', $location)===1) {
+                // Hochbrück - Informatik
+                self::switchLocation($event, $location, 'Parkring 35-39, 85748 Garching bei München');
             } else if (preg_match('/51\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // Physik
                 self::switchLocation($event, $location, 'James-Franck-Straße 1, 85748 Garching bei München');
