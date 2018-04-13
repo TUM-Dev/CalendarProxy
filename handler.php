@@ -10,8 +10,7 @@ class handler {
      * Parse the event and do the replacement and optimizations
      * @param $e Event a single ical event that should be cleaned up
      */
-    public static function cleanEvent(Event &$e)
-    {
+    public static function cleanEvent(Event &$e) {
         $event = new \Eluceo\iCal\Component\Event();
 
         //Strip added slashes by the parser
@@ -122,8 +121,7 @@ class handler {
      * @param $e array element to be edited
      * @param $newLoc string new location that should be set to the element
      */
-    public static function switchLocation(\Eluceo\iCal\Component\Event &$e, $oldLocation, $newLoc)
-    {
+    public static function switchLocation(\Eluceo\iCal\Component\Event &$e, $oldLocation, $newLoc) {
         $e->setDescription($oldLocation . "\n" . $e->getDescription());
         $e->setLocation($newLoc, $oldLocation);
     }
@@ -132,8 +130,7 @@ class handler {
      * Remove duplicate entries: events that happen at the same time in multiple locations
      * @param $events
      */
-    public static function noDupes(array &$events)
-    {
+    public static function noDupes(array &$events) {
         //Sort them
         usort($events, function (Event $a, Event $b) {
             if (strtotime($a->dtstart) > strtotime($b->dtstart)) {
