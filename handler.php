@@ -60,27 +60,28 @@ class handler {
 
         //Try to make sense out of the location
         if (!empty($location)) {
+            preg_match('/^(.*?,)/', $location, $matches);
             if (preg_match('/56\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // Informatik
-                self::switchLocation($event, $location, 'Boltzmannstraße 3, 85748 Garching bei München');
+                self::switchLocation($event, $location, $matches[1].' Boltzmannstraße 3, 85748 Garching bei München');
             } else if (preg_match('/55\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // Maschbau
-                self::switchLocation($event, $location, 'Boltzmannstraße 15, 85748 Garching bei München');
+                self::switchLocation($event, $location, $matches[1].' Boltzmannstraße 15, 85748 Garching bei München');
             } else if (preg_match('/8101\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // Hochbrück - Physics
-                self::switchLocation($event, $location, 'Parkring 11-13, 85748 Garching bei München');
+                self::switchLocation($event, $location, $matches[1].' Parkring 11-13, 85748 Garching bei München');
             } else if (preg_match('/8102\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // Hochbrück - Informatik
-                self::switchLocation($event, $location, 'Parkring 35-39, 85748 Garching bei München');
+                self::switchLocation($event, $location, $matches[1].' Parkring 35-39, 85748 Garching bei München');
             } else if (preg_match('/51\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // Physik
-                self::switchLocation($event, $location, 'James-Franck-Straße 1, 85748 Garching bei München');
+                self::switchLocation($event, $location, $matches[1].' James-Franck-Straße 1, 85748 Garching bei München');
             } else if (preg_match('/05\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // TUM Campus Innenstadt
-                self::switchLocation($event, $location, 'Arcisstraße 21, 80333 München');
+                self::switchLocation($event, $location, $matches[1].' Arcisstraße 21, 80333 München');
             } else if (preg_match('/01\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
                 // TUM Innenstadt Nordbau
-                self::switchLocation($event, $location, 'Theresienstraße 90, 80333 München');
+                self::switchLocation($event, $location, $matches[1].' Theresienstraße 90, 80333 München');
             }
         }
 
