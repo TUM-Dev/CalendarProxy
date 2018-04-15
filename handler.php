@@ -23,16 +23,24 @@ class handler {
         $event->setLocation($location);
 
         //Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
-        $summary = preg_replace('/([\(\[](?:(?:IN|MA)\d+,?\s?)+[\)\]]).+/', '', $summary);
+        $summary = preg_replace('/([\(\[](?:(?:IN|MA|WI)\d+,?\s?)+[\)\]]).+/', '', $summary);
 
         //Some common replacements: yes its a long list
         $searchReplace = [];
         $searchReplace['Tutorübungen'] = 'TÜ';
         $searchReplace['Grundlagen'] = 'G';
         $searchReplace['Datenbanken'] = 'DB';
+        $searchReplace['Zentralübungen'] = 'ZÜ';
         $searchReplace['Zentralübung'] = 'ZÜ';
         $searchReplace['Vertiefungsübungen'] = 'VÜ';
         $searchReplace['Übungen'] = 'Ü';
+        $searchReplace['Übung'] = 'Ü';
+        $searchReplace['Exercises'] = 'EX';
+        $searchReplace['Planen und Entscheiden in betrieblichen Informationssystemen - Wirtschaftsinformatik 4'] = 'PLEBIS';
+        $searchReplace['Planen und Entscheiden in betrieblichen Informationssystemen'] = 'PLEBIS';
+        $searchReplace['Statistics for Business Administration (with Introduction to  R)'] = 'Stats';
+        $searchReplace['Kostenrechnung für Wirtschaftsinformatik und Nebenfach'] = 'KR';
+        $searchReplace['Kostenrechnung'] = 'KR';
         $searchReplace['Mathematische Behandlung der Natur- und Wirtschaftswissenschaften (Mathematik 1)'] = 'MBNW';
         $searchReplace['Einführung in die Wirtschaftsinformatik'] = 'WINFO';
         $searchReplace['Betriebssysteme und Systemsoftware'] = 'BS';
@@ -142,14 +150,14 @@ class handler {
         $total = count($events);
         for ($i = 1; $i < $total; $i++) {
             //Check if start time, end time and title match then merge
-            if ($events[ $i - 1 ]->dtstart === $events[ $i ]->dtstart
-                && $events[ $i - 1 ]->dtend === $events[ $i ]->dtend
-                && $events[ $i - 1 ]->summary === $events[ $i ]->summary) {
+            if ($events[$i - 1]->dtstart === $events[$i]->dtstart
+                && $events[$i - 1]->dtend === $events[$i]->dtend
+                && $events[$i - 1]->summary === $events[$i]->summary) {
                 //Append the location to the next (same) element
-                $events[ $i ]->location .= "\n" . $events[ $i - 1 ]->location;
+                $events[$i]->location .= "\n" . $events[$i - 1]->location;
 
                 //Mark this element for removal
-                unset($events[ $i - 1 ]);
+                unset($events[$i - 1]);
             }
         }
     }
