@@ -23,16 +23,24 @@ class handler {
         $event->setLocation($location);
 
         //Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
-        $summary = preg_replace('/([\(\[](?:(?:IN|MA)\d+,?\s?)+[\)\]]).+/', '', $summary);
+        $summary = preg_replace('/([\(\[](?:(?:IN|MA|WI)\d+,?\s?)+[\)\]]).+/', '', $summary);
 
         //Some common replacements: yes its a long list
         $searchReplace = [];
         $searchReplace['Tutorübungen'] = 'TÜ';
         $searchReplace['Grundlagen'] = 'G';
         $searchReplace['Datenbanken'] = 'DB';
+        $searchReplace['Zentralübungen'] = 'ZÜ';
         $searchReplace['Zentralübung'] = 'ZÜ';
         $searchReplace['Vertiefungsübungen'] = 'VÜ';
         $searchReplace['Übungen'] = 'Ü';
+        $searchReplace['Übung'] = 'Ü';
+        $searchReplace['Exercises'] = 'EX';
+        $searchReplace['Planen und Entscheiden in betrieblichen Informationssystemen - Wirtschaftsinformatik 4'] = 'PLEBIS';
+        $searchReplace['Planen und Entscheiden in betrieblichen Informationssystemen'] = 'PLEBIS';
+        $searchReplace['Statistics for Business Administration (with Introduction to  R)'] = 'Stats';
+        $searchReplace['Kostenrechnung für Wirtschaftsinformatik und Nebenfach'] = 'KR';
+        $searchReplace['Kostenrechnung'] = 'KR';
         $searchReplace['Mathematische Behandlung der Natur- und Wirtschaftswissenschaften (Mathematik 1)'] = 'MBNW';
         $searchReplace['Einführung in die Wirtschaftsinformatik'] = 'WINFO';
         $searchReplace['Betriebssysteme und Systemsoftware'] = 'BS';
@@ -60,25 +68,25 @@ class handler {
 
         //Try to make sense out of the location
         if (!empty($location)) {
-            if (preg_match('/56\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
+            if (preg_match('/56\d{2}\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // Informatik
                 self::switchLocation($event, $location, 'Boltzmannstraße 3, 85748 Garching bei München');
-            } else if (preg_match('/55\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
+            } else if (preg_match('/55\d{2}\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // Maschbau
                 self::switchLocation($event, $location, 'Boltzmannstraße 15, 85748 Garching bei München');
-            } else if (preg_match('/8101\.((EG)|\d{2})\.\d+/', $location)===1) {
+            } else if (preg_match('/8101\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // Hochbrück - Physics
                 self::switchLocation($event, $location, 'Parkring 11-13, 85748 Garching bei München');
-            } else if (preg_match('/8102\.((EG)|\d{2})\.\d+/', $location)===1) {
+            } else if (preg_match('/8102\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // Hochbrück - Informatik
                 self::switchLocation($event, $location, 'Parkring 35-39, 85748 Garching bei München');
-            } else if (preg_match('/51\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
+            } else if (preg_match('/51\d{2}\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // Physik
                 self::switchLocation($event, $location, 'James-Franck-Straße 1, 85748 Garching bei München');
-            } else if (preg_match('/05\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
+            } else if (preg_match('/05\d{2}\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // TUM Campus Innenstadt
                 self::switchLocation($event, $location, 'Arcisstraße 21, 80333 München');
-            } else if (preg_match('/01\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
+            } else if (preg_match('/01\d{2}\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // TUM Innenstadt Nordbau
                 self::switchLocation($event, $location, 'Theresienstraße 90, 80333 München');
             }
@@ -141,14 +149,14 @@ class handler {
         $total = count($events);
         for ($i = 1; $i < $total; $i++) {
             //Check if start time, end time and title match then merge
-            if ($events[ $i - 1 ]->dtstart === $events[ $i ]->dtstart
-                && $events[ $i - 1 ]->dtend === $events[ $i ]->dtend
-                && $events[ $i - 1 ]->summary === $events[ $i ]->summary) {
+            if ($events[$i - 1]->dtstart === $events[$i]->dtstart
+                && $events[$i - 1]->dtend === $events[$i]->dtend
+                && $events[$i - 1]->summary === $events[$i]->summary) {
                 //Append the location to the next (same) element
-                $events[ $i ]->location .= "\n" . $events[ $i - 1 ]->location;
+                $events[$i]->location .= "\n" . $events[$i - 1]->location;
 
                 //Mark this element for removal
-                unset($events[ $i - 1 ]);
+                unset($events[$i - 1]);
             }
         }
     }
