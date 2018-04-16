@@ -10,7 +10,6 @@ if (!preg_match('!/$!', $appPath)) {
 
 //Store in constants
 define('APPLICATION_PATH', $appPath);
-define('PATH_ABOUT', APPLICATION_PATH . 'about.php');
 define('TIMEZONE', 'Europe/Berlin');
 
 //Setup Timezone
@@ -20,20 +19,11 @@ date_default_timezone_set(TIMEZONE);
 //Include composer components
 require $appPath . '../vendor/autoload.php';
 
-//Secruity thingy: Comment this out to enable debugging
-unset($_GET['debug']);
-
-//Only output errors if debugging
-if (isset($_GET['debug'])) {
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
-} else {
-    error_reporting(0);
-    ini_set('display_errors', 0);
-}
+//Don't output errors
+error_reporting(0);
+ini_set('display_errors', 0);
 
 //Make sure php is using utf as well as the output is recognized as utf8
-header('Content-Type: text/html; charset=UTF-8');
 mb_internal_encoding('UTF-8');
 
 
@@ -42,8 +32,9 @@ mb_internal_encoding('UTF-8');
  * Also catch ppl trying to inject something over the parameters.
  */
 if (!isset($_GET['pStud'], $_GET['pToken']) || !ctype_alnum($_GET['pStud']) || !ctype_alnum($_GET['pToken'])) {
-    include PATH_ABOUT;
-    die($page);
+    header('Content-Type: text/html; charset=UTF-8');
+    include APPLICATION_PATH . 'about.php';
+    die();
 }
 
 /**
@@ -55,7 +46,7 @@ $allEvents = $iCal->events();
 
 //Check if anything was received
 if (empty($allEvents)) {
-    die('Ihre parameter sind ung&uuml;ltig oder ein anderer Fehler ist aufgetreten');
+    die('Die parameter sind ung&uuml;ltig oder ein anderer Fehler ist aufgetreten');
 }
 
 //Remove dupes
@@ -98,9 +89,6 @@ foreach ($allEvents as $e) {
 }
 
 
-//Output if we are not debugging
-if (!isset($_GET['debug'])) {
-    header('Content-Type: text/calendar; charset=utf-8');
-    header('Content-Disposition: attachment; filename="cal.ics"');
-    echo $cal->render();
-}
+header('Content-Type: text/calendar; charset=utf-8');
+header('Content-Disposition: attachment; filename="cal.ics"');
+echo $cal->render();
