@@ -10,9 +10,7 @@ if (!preg_match('!/$!', $appPath)) {
 
 //Store in constants
 define('APPLICATION_PATH', $appPath);
-define('PATH_HEADER', APPLICATION_PATH . '../header.html');
-define('PATH_FOOTER', APPLICATION_PATH . '../footer.html');
-define('PATH_ABOUT', APPLICATION_PATH . 'about.html');
+define('PATH_ABOUT', APPLICATION_PATH . 'about.php');
 define('TIMEZONE', 'Europe/Berlin');
 
 //Setup Timezone
@@ -20,7 +18,7 @@ $defaultTimeZone = new \DateTimeZone(TIMEZONE);
 date_default_timezone_set(TIMEZONE);
 
 //Include composer components
-require $appPath . 'vendor/autoload.php';
+require $appPath . '../vendor/autoload.php';
 
 //Secruity thingy: Comment this out to enable debugging
 unset($_GET['debug']);
@@ -44,11 +42,7 @@ mb_internal_encoding('UTF-8');
  * Also catch ppl trying to inject something over the parameters.
  */
 if (!isset($_GET['pStud'], $_GET['pToken']) || !ctype_alnum($_GET['pStud']) || !ctype_alnum($_GET['pToken'])) {
-    if (file_exists(PATH_HEADER) && file_exists(PATH_FOOTER)) {
-        $page = file_get_contents(PATH_HEADER) . str_replace('%HOST%', $_SERVER['SERVER_NAME'] . '/' . basename(__DIR__), file_get_contents(PATH_ABOUT)) . file_get_contents(PATH_FOOTER);
-    } else {
-        $page = str_replace('%HOST%', $_SERVER['SERVER_NAME'], file_get_contents(PATH_ABOUT));
-    }
+    include PATH_ABOUT;
     die($page);
 }
 
