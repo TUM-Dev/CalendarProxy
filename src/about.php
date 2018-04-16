@@ -14,7 +14,7 @@
 <ol>
     <li>Grab the URL from the <a href="https://campus.tum.de/tumonline/wbKalender.wbPerson">TUMO calendar</a> via the 'Veröffentlichen' button</li>
     <li>Copy 'n' Paste the query string (everything after the ? sign, e.g. "?pStud=ABCDEF&pToken=XYZ") and append it to this url:
-        <a href="#dontclickme">https://<?=$_SERVER['SERVER_NAME']?>/</a> so it looks like this: <a href="#dontclickme">https://<?=$_SERVER['SERVER_NAME']?>/?pStud=ABCDEF&pToken=XYZ</a>
+        <a href="#dontclickme">https://cal.bruck.me/</a> so it looks like this: <a href="#dontclickme">https://cal.bruck.me/?pStud=ABCDEF&pToken=XYZ</a>
     </li>
     <li>???</li>
     <li>Profit!</li>

@@ -17,10 +17,10 @@ $defaultTimeZone = new \DateTimeZone(TIMEZONE);
 date_default_timezone_set(TIMEZONE);
 
 //Include composer components
-require $appPath . '../vendor/autoload.php';
+require $appPath . './vendor/autoload.php';
 
 //Don't output errors
-error_reporting(0);
+error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
 //Make sure php is using utf as well as the output is recognized as utf8
