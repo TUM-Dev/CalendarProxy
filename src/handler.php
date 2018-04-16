@@ -4,13 +4,15 @@ namespace CalProxy;
 
 use ICal\Event;
 
-class handler {
+class handler
+{
 
     /**
      * Parse the event and do the replacement and optimizations
      * @param $e Event a single ical event that should be cleaned up
      */
-    public static function cleanEvent(Event &$e) {
+    public static function cleanEvent(Event &$e)
+    {
         $event = new \Eluceo\iCal\Component\Event();
 
         //Strip added slashes by the parser
@@ -69,27 +71,30 @@ class handler {
         //Try to make sense out of the location
         if (!empty($location)) {
             preg_match('/^(.*?,)/', $location, $matches);
-            if (preg_match('/56\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
+            if (preg_match('/56\d{2}\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // Informatik
-                self::switchLocation($event, $location, $matches[1].' Boltzmannstraße 3, 85748 Garching bei München');
-            } else if (preg_match('/55\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
+                self::switchLocation($event, $location, $matches[1] . ' Boltzmannstraße 3, 85748 Garching bei München');
+            } else if (preg_match('/55\d{2}\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // Maschbau
-                self::switchLocation($event, $location, $matches[1].' Boltzmannstraße 15, 85748 Garching bei München');
-            } else if (preg_match('/8101\.((EG)|\d{2})\.\d+/', $location)===1) {
+                self::switchLocation($event, $location, $matches[1] . ' Boltzmannstraße 15, 85748 Garching bei München');
+            } else if (preg_match('/8101\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // Hochbrück - Physics
-                self::switchLocation($event, $location, $matches[1].' Parkring 11-13, 85748 Garching bei München');
-            } else if (preg_match('/8102\.((EG)|\d{2})\.\d+/', $location)===1) {
+                self::switchLocation($event, $location, $matches[1] . ' Parkring 11-13, 85748 Garching bei München');
+            } else if (preg_match('/8102\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // Hochbrück - Informatik
-                self::switchLocation($event, $location, $matches[1].' Parkring 35-39, 85748 Garching bei München');
-            } else if (preg_match('/51\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
+                self::switchLocation($event, $location, $matches[1] . ' Parkring 35-39, 85748 Garching bei München');
+            } else if (preg_match('/5123\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // Physik
-                self::switchLocation($event, $location, $matches[1].' James-Franck-Straße 1, 85748 Garching bei München');
-            } else if (preg_match('/05\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
+                self::switchLocation($event, $location, $matches[1] . ' Am Coulombwall 1, 85748 Garching bei München');
+            } else if (preg_match('/51\d{2}\.((EG)|\d{2})\.\d+/', $location) === 1) {
+                // Physik
+                self::switchLocation($event, $location, $matches[1] . ' James-Franck-Straße 1, 85748 Garching bei München');
+            } else if (preg_match('/05\d{2}\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // TUM Campus Innenstadt
-                self::switchLocation($event, $location, $matches[1].' Arcisstraße 21, 80333 München');
-            } else if (preg_match('/01\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
+                self::switchLocation($event, $location, $matches[1] . ' Arcisstraße 21, 80333 München');
+            } else if (preg_match('/01\d{2}\.((EG)|\d{2})\.\d+/', $location) === 1) {
                 // TUM Innenstadt Nordbau
-                self::switchLocation($event, $location, $matches[1].' Theresienstraße 90, 80333 München');
+                self::switchLocation($event, $location, $matches[1] . ' Theresienstraße 90, 80333 München');
             }
         }
 
@@ -125,7 +130,8 @@ class handler {
      * @param $e array element to be edited
      * @param $newLoc string new location that should be set to the element
      */
-    public static function switchLocation(\Eluceo\iCal\Component\Event &$e, $oldLocation, $newLoc) {
+    public static function switchLocation(\Eluceo\iCal\Component\Event &$e, $oldLocation, $newLoc)
+    {
         $e->setDescription($oldLocation . "\n" . $e->getDescription());
         $e->setLocation($newLoc, $oldLocation);
     }
@@ -134,7 +140,8 @@ class handler {
      * Remove duplicate entries: events that happen at the same time in multiple locations
      * @param $events
      */
-    public static function noDupes(array &$events) {
+    public static function noDupes(array &$events)
+    {
         //Sort them
         usort($events, function (Event $a, Event $b) {
             if (strtotime($a->dtstart) > strtotime($b->dtstart)) {
