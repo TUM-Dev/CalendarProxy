@@ -25,6 +25,9 @@ class handler {
         //Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
         $summary = preg_replace('/([\(\[](?:(?:IN|MA|WI)\d+,?\s?)+[\)\]]).+/', '', $summary);
 
+        //combine multiple spaces in summary into one
+        $summary = preg_replace('/\s\s+/', ' ', $summary);
+
         //Some common replacements: yes its a long list
         $searchReplace = [];
         $searchReplace['Tutorübungen'] = 'TÜ';
@@ -38,7 +41,7 @@ class handler {
         $searchReplace['Exercises'] = 'EX';
         $searchReplace['Planen und Entscheiden in betrieblichen Informationssystemen - Wirtschaftsinformatik 4'] = 'PLEBIS';
         $searchReplace['Planen und Entscheiden in betrieblichen Informationssystemen'] = 'PLEBIS';
-        $searchReplace['Statistics for Business Administration (with Introduction to  R)'] = 'Stats';
+        $searchReplace['Statistics for Business Administration (with Introduction to R)'] = 'Stats';
         $searchReplace['Kostenrechnung für Wirtschaftsinformatik und Nebenfach'] = 'KR';
         $searchReplace['Kostenrechnung'] = 'KR';
         $searchReplace['Mathematische Behandlung der Natur- und Wirtschaftswissenschaften (Mathematik 1)'] = 'MBNW';
