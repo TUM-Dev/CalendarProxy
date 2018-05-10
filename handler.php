@@ -6,11 +6,19 @@ use ICal\Event;
 
 class handler {
 
+    /** Associative array that maps building-ids to addresses */
+    private $buidings;
+
+    public function __construct() {
+        // Load building addresses from file
+        $this->buildings = json_decode(file_get_contents(APPLICATION_PATH."buildings.json"), true);
+    }
+
     /**
      * Parse the event and do the replacement and optimizations
      * @param $e Event a single ical event that should be cleaned up
      */
-    public static function cleanEvent(Event &$e) {
+    public function cleanEvent(Event &$e) {
         $event = new \Eluceo\iCal\Component\Event();
 
         //Strip added slashes by the parser
@@ -70,29 +78,12 @@ class handler {
         $summary = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, ', 'VI, ', 'TT, ', 'UE, '], '', $summary);
 
         //Try to make sense out of the location
-        if (!empty($location)) {
-            preg_match('/^(.*?,)/', $location, $matches);
-            if (preg_match('/56\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
-                // Informatik
-                self::switchLocation($event, $location, $matches[1].' Boltzmannstraße 3, 85748 Garching bei München');
-            } else if (preg_match('/55\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
-                // Maschbau
-                self::switchLocation($event, $location, $matches[1].' Boltzmannstraße 15, 85748 Garching bei München');
-            } else if (preg_match('/8101\.((EG)|\d{2})\.\d+/', $location)===1) {
-                // Hochbrück - Physics
-                self::switchLocation($event, $location, $matches[1].' Parkring 11-13, 85748 Garching bei München');
-            } else if (preg_match('/8102\.((EG)|\d{2})\.\d+/', $location)===1) {
-                // Hochbrück - Informatik
-                self::switchLocation($event, $location, $matches[1].' Parkring 35-39, 85748 Garching bei München');
-            } else if (preg_match('/51\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
-                // Physik
-                self::switchLocation($event, $location, $matches[1].' James-Franck-Straße 1, 85748 Garching bei München');
-            } else if (preg_match('/05\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
-                // TUM Campus Innenstadt
-                self::switchLocation($event, $location, $matches[1].' Arcisstraße 21, 80333 München');
-            } else if (preg_match('/01\d{2}\.((EG)|\d{2})\.\d+/', $location)===1) {
-                // TUM Innenstadt Nordbau
-                self::switchLocation($event, $location, $matches[1].' Theresienstraße 90, 80333 München');
+        if (preg_match('/^(.*?),.*(\d{4})\.(?:\d\d|EG|UG|DG)\.\d+/', $location, $matches) === 1) {
+            $room = $matches[1]; // architect roomnumber (e.g. N1190)
+            $b_id = $matches[2]; // 4-digit building-id (e.g. 0101)
+
+            if (array_key_exists($b_id, $buildings)) {
+                self::switchLocation($event, $location, $room.", ".$buildings[$b_id]);
             }
         }
 
