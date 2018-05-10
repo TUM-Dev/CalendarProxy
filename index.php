@@ -98,7 +98,7 @@ $vTimezone->addComponent($vTimezoneRuleDst);
 $vTimezone->addComponent($vTimezoneRuleStd);
 $cal->setTimezone($vTimezone);
 
-$handler = CalProxy\handler();
+$handler =  new CalProxy\handler();
 //Event loop
 foreach ($allEvents as $e) {
     $cal->addComponent($handler->cleanEvent($e));

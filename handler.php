@@ -11,7 +11,7 @@ class handler {
 
     public function __construct() {
         // Load building addresses from file
-        $this->buildings = json_decode(file_get_contents(APPLICATION_PATH."buildings.json"), true);
+        $this->buildings = json_decode(file_get_contents("buildings.json"), true);
     }
 
     /**
@@ -82,8 +82,8 @@ class handler {
             $room = $matches[1]; // architect roomnumber (e.g. N1190)
             $b_id = $matches[2]; // 4-digit building-id (e.g. 0101)
 
-            if (array_key_exists($b_id, $buildings)) {
-                self::switchLocation($event, $location, $room.", ".$buildings[$b_id]);
+            if (array_key_exists($b_id, $this->buildings)) {
+                self::switchLocation($event, $location, $room.", ".$this->buildings[$b_id]);
             }
         }
 
