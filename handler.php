@@ -33,6 +33,9 @@ class handler {
         //Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
         $summary = preg_replace('/([\(\[](?:(?:IN|MA|WI)\d+,?\s?)+[\)\]]).+/', '', $summary);
 
+        //remove location and teacher from language course title
+        $summary = preg_replace('/(München|Garching|Weihenstephan).+/', '', $summary);
+
         //combine multiple spaces in summary into one
         $summary = preg_replace('/\s\s+/', ' ', $summary);
 
@@ -47,6 +50,10 @@ class handler {
         $searchReplace['Übungen'] = 'Ü';
         $searchReplace['Übung'] = 'Ü';
         $searchReplace['Exercises'] = 'EX';
+        $searchReplace['Software Engineering für betriebliche Anwendungen - Bachelorkurs'] = 'SEBA';
+        $searchReplace['Volkswirtschaftslehre'] = 'VWL';
+        $searchReplace['Funktionale Programmierung und Verifikation'] = 'FPV';
+        $searchReplace['Buchführung und Rechnungswesen'] = 'BF & RW';
         $searchReplace['Planen und Entscheiden in betrieblichen Informationssystemen - Wirtschaftsinformatik 4'] = 'PLEBIS';
         $searchReplace['Planen und Entscheiden in betrieblichen Informationssystemen'] = 'PLEBIS';
         $searchReplace['Statistics for Business Administration (with Introduction to R)'] = 'Stats';
@@ -70,12 +77,13 @@ class handler {
         $searchReplace[' der Künstlichen Intelligenz'] = 'KI';
         $searchReplace['Advanced Topics of Software Engineering'] = 'ASE';
         $searchReplace['Praktikum - iPraktikum, iOS Praktikum'] = 'iPraktikum';
+        $searchReplace['B1.1+B1.2 (intensiv)'] = 'B1';
 
         //Do the replacement
         $summary = strtr($summary, $searchReplace);
 
         //Remove some stuff which is not really needed
-        $summary = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, ', 'VI, ', 'TT, ', 'UE, '], '', $summary);
+        $summary = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, ', 'VI, ', 'TT, ', 'UE, ', 'SE, '], '', $summary);
 
         //Try to make sense out of the location
         if (preg_match('/^(.*?),.*(\d{4})\.(?:\d\d|EG|UG|DG)\.\d+/', $location, $matches) === 1) {
