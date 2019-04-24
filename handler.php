@@ -49,6 +49,7 @@ class handler {
         $searchReplace['Vertiefungsübungen'] = 'VÜ';
         $searchReplace['Übungen'] = 'Ü';
         $searchReplace['Übung'] = 'Ü';
+        $searchReplace['Exercise'] = 'EX';
         $searchReplace['Exercises'] = 'EX';
         $searchReplace['Software Engineering für betriebliche Anwendungen - Bachelorkurs'] = 'SEBA';
         $searchReplace['Volkswirtschaftslehre'] = 'VWL';
@@ -61,6 +62,10 @@ class handler {
         $searchReplace['Kostenrechnung'] = 'KR';
         $searchReplace['Mathematische Behandlung der Natur- und Wirtschaftswissenschaften (Mathematik 1)'] = 'MBNW';
         $searchReplace['Einführung in die Wirtschaftsinformatik'] = 'WINFO';
+        $searchReplace['Projektorganisation und -management in der Softwaretechnik'] = 'POM';
+        $searchReplace['Empirical Research Methods'] = 'ERM';
+        $searchReplace['Informationsmanagement'] = 'IM';
+        $searchReplace['Bachelor-Seminar: Digitale Hochschule: Aktuelle Trends und Herausforderungen'] = 'Digitale Hochschule';
         $searchReplace['Betriebssysteme und Systemsoftware'] = 'BS';
         $searchReplace['Einführung in die Informatik '] = 'INFO';
         $searchReplace['Praktikum: Grundlagen der Programmierung'] = 'PGP';
