@@ -7,7 +7,7 @@ use ICal\Event;
 class handler {
 
     /** Associative array that maps building-ids to addresses */
-    private $buidings;
+    private $buildings;
 
     public function __construct() {
         // Load building addresses from file
@@ -91,7 +91,7 @@ class handler {
         $summary = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, ', 'VI, ', 'TT, ', 'UE, ', 'SE, '], '', $summary);
 
         //Try to make sense out of the location
-        if (preg_match('/^(.*?),.*(\d{4})\.(?:\d\d|EG|UG|DG)\.\d+/', $location, $matches) === 1) {
+        if (preg_match('/^(.*?),.*(\d{4})\.(?:\d\d|EG|UG|DG|Z\d|U\d)\.\d+/', $location, $matches) === 1) {
             $room = $matches[1]; // architect roomnumber (e.g. N1190)
             $b_id = $matches[2]; // 4-digit building-id (e.g. 0101)
 
