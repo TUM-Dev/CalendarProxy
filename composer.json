@@ -1,4 +1,7 @@
 {
+  "name": "tum-dev/calendar-proxy",
+  "description": "A proxy to filter out junk from the offical TUM Campus Online ical service.",
+  "license": "GPL-2.0-only",
   "scripts": {
     "test": "phpunit"
   },
