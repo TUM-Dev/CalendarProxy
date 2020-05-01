@@ -27,7 +27,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ github.token }}
         registry: docker.pkg.github.com
-        repository: TUM-Dev/CalendarProxy/server
+        repository: tum-dev/calendarproxy/server
         tags: latest
         tag_with_ref: true
         tag_with_sha: true

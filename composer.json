@@ -4,7 +4,7 @@
   },
   "require": {
     "eluceo/ical": "0.6.*",
-    "johngrogg/ics-parser": "dev-master"
+    "johngrogg/ics-parser": "2.1.*"
   },
   "require-dev": {
     "phpunit/phpunit": "6.*.*"
