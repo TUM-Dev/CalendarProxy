@@ -4,8 +4,7 @@ namespace CalProxy;
 
 use ICal\Event;
 
-class handler
-{
+class handler {
 
     /** Associative array that maps building-ids to addresses */
     private $buildings;
@@ -19,8 +18,7 @@ class handler
      * Parse the event and do the replacement and optimizations
      * @param $e Event a single ical event that should be cleaned up
      */
-    public static function cleanEvent(Event &$e)
-    {
+    public function cleanEvent(Event &$e) {
         $event = new \Eluceo\iCal\Component\Event();
 
         //Strip added slashes by the parser
@@ -98,7 +96,7 @@ class handler
             $b_id = $matches[2]; // 4-digit building-id (e.g. 0101)
 
             if (array_key_exists($b_id, $this->buildings)) {
-                self::switchLocation($event, $location, $room.", ".$this->buildings[$b_id]);
+                self::switchLocation($event, $location, $room . ", " . $this->buildings[$b_id]);
             }
         }
 
@@ -134,8 +132,7 @@ class handler
      * @param $e array element to be edited
      * @param $newLoc string new location that should be set to the element
      */
-    public static function switchLocation(\Eluceo\iCal\Component\Event &$e, $oldLocation, $newLoc)
-    {
+    public static function switchLocation(\Eluceo\iCal\Component\Event &$e, $oldLocation, $newLoc) {
         $e->setDescription($oldLocation . "\n" . $e->getDescription());
         $e->setLocation($newLoc, $oldLocation);
     }
@@ -144,8 +141,7 @@ class handler
      * Remove duplicate entries: events that happen at the same time in multiple locations
      * @param $events
      */
-    public static function noDupes(array &$events)
-    {
+    public static function noDupes(array &$events) {
         //Sort them
         usort($events, function (Event $a, Event $b) {
             if (strtotime($a->dtstart) > strtotime($b->dtstart)) {

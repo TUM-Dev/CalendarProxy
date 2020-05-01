@@ -1,5 +1,6 @@
 <?php
 
+use Eluceo\iCal\Component\Calendar;
 use ICal\ICal;
 
 //Global absolute path
@@ -53,7 +54,7 @@ if (empty($allEvents)) {
 CalProxy\handler::noDupes($allEvents);
 
 //Create new object for outputting the new calender
-$cal = new \Eluceo\iCal\Component\Calendar('TUM iCal Proxy');
+$cal = new Calendar('TUM iCal Proxy');
 
 // Create timezone rule object for Daylight Saving Time
 $vTimezoneRuleDst = new \Eluceo\iCal\Component\TimezoneRule(\Eluceo\iCal\Component\TimezoneRule::TYPE_DAYLIGHT);
