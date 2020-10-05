@@ -31,7 +31,7 @@ class handler {
         $event->setLocation($location);
 
         //Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
-        $summary = preg_replace('/([\(\[](?:(?:IN|MA|WI)\d+,?\s?)+[\)\]]).+/', '', $summary);
+        $summary = preg_replace('/([(\[](?:(?:IN|MA|WI)\d+,?\s?)+[)\]]).+/', '', $summary);
 
         //remove location and teacher from language course title
         $summary = preg_replace('/(München|Garching|Weihenstephan).+/', '', $summary);
