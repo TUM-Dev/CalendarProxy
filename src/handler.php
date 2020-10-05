@@ -160,11 +160,19 @@ class handler {
             if ($events[$i - 1]->dtstart === $events[$i]->dtstart
                 && $events[$i - 1]->dtend === $events[$i]->dtend
                 && $events[$i - 1]->summary === $events[$i]->summary) {
-                //Append the location to the next (same) element
-                $events[$i]->location .= "\n" . $events[$i - 1]->location;
-
-                //Mark this element for removal
-                unset($events[$i - 1]);
+                //if this and next event are the same, check whether the next is held in interims
+                if (strpos($events[$i]->location, "Interims")) {
+                    //Append the location from the next (same) element to this element
+                    $events[$i - 1]->location .= "\n" . $events[$i]->location;
+                    //Mark next element for removal
+                    unset($events[$i]);
+                    $i--;
+                } else {
+                    //Append the location to the next (same) element
+                    $events[$i]->location .= "\n" . $events[$i - 1]->location;
+                    //Mark this element for removal
+                    unset($events[$i - 1]);
+                }
             }
         }
     }
