@@ -16,15 +16,17 @@ h1 {
     font-size: 42px;
 }
 
-#tumCalLink, #generateLinkBtn{
+#tumCalLink, #generateLinkBtn {
     width: 100%;
     margin: 0;
     border: 2px solid #aaa;
 }
-#tumCalLink{
+
+#tumCalLink {
     border: 2px solid #aaa;
 }
-#generateLinkBtn{
+
+#generateLinkBtn {
     border: 2px solid #007cea;
 }
 
@@ -39,35 +41,42 @@ h1 {
     margin-right: auto;
     margin-left: auto;
 }
-img{
+
+img {
     width: 100%;
 }
-.inputWrapper{
+
+.inputWrapper {
     margin-top: 8px;
     margin-bottom: 8px;
 }
 
-@media (min-width: 576px){
+@media (min-width: 576px) {
     .container {
         max-width: 540px;
     }
-    img{
+
+    img {
         width: auto;
     }
-    #generateLinkBtn{
+
+    #generateLinkBtn {
         width: fit-content;
     }
-    #tumCalLink{
+
+    #tumCalLink {
         width: -moz-fit-content;
     }
-    .inputWrapper{
+
+    .inputWrapper {
         display: flex;
     }
 }
 
 @media (min-width: 768px) {
-    .container{
-        max-width: 720px;!important;
+    .container {
+        max-width: 720px;
+    !important;
     }
 }
 
