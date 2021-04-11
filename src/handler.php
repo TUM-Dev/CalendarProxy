@@ -77,12 +77,15 @@ class handler {
         $searchReplace['Diskrete Strukturen'] = 'DS';
         $searchReplace['Diskrete Wahrscheinlichkeitstheorie'] = 'DWT';
         $searchReplace['Numerisches Programmieren'] = 'NumProg';
+        $searchReplace['Modellbildung und Simulation'] = 'ModSim';
+        $searchReplace['(Fokus Analysis)'] = '(Ana)';
         $searchReplace['Lineare Algebra für Informatik'] = 'LinAlg';
         $searchReplace['Analysis für Informatik'] = 'Analysis';
         $searchReplace[' der Künstlichen Intelligenz'] = 'KI';
         $searchReplace['Advanced Topics of Software Engineering'] = 'ASE';
         $searchReplace['Praktikum - iPraktikum, iOS Praktikum'] = 'iPraktikum';
         $searchReplace['B1.1+B1.2 (intensiv)'] = 'B1';
+
 
         //Do the replacement
         $summary = strtr($summary, $searchReplace);
