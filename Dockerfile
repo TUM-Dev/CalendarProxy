@@ -7,5 +7,5 @@ COPY ./src /app
 
 RUN composer install --no-dev
 
-FROM webdevops/php-nginx:7.4-alpine
+FROM webdevops/php-nginx:8.0-alpine
 COPY --from=composer /app /app
