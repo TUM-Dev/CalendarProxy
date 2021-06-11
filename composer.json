@@ -6,7 +6,7 @@
     "test": "phpunit --bootstrap src/handler.php"
   },
   "require": {
-    "eluceo/ical": "~0.6",
+    "eluceo/ical": "~2.2",
     "johngrogg/ics-parser": "~2.1"
   },
   "require-dev": {
