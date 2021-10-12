@@ -31,7 +31,7 @@ class handler {
         $event->setLocation($location);
 
         //Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
-        $summary = preg_replace('/([(\[](?:(?:IN|MA|WI)\d+,?\s?)+[)\]]).+/', '', $summary);
+        $summary = preg_replace('/([(\[](?:(?:IN|MA|WI|WIB)\d+,?\s?)+[)\]]).+/', '', $summary);
 
         //remove location and teacher from language course title
         $summary = preg_replace('/(München|Garching|Weihenstephan).+/', '', $summary);
@@ -85,13 +85,18 @@ class handler {
         $searchReplace['Advanced Topics of Software Engineering'] = 'ASE';
         $searchReplace['Praktikum - iPraktikum, iOS Praktikum'] = 'iPraktikum';
         $searchReplace['B1.1+B1.2 (intensiv)'] = 'B1';
+        $searchReplace['Business Analytics and Machine Learning'] = 'BA & ML';
+        $searchReplace['Netzsicherheit'] = 'NetSec';
+        $searchReplace['Management Accounting'] = 'MA';
+        $searchReplace['Advanced Seminar Finance & Accounting'] = 'Seminar F&A';
+        $searchReplace['Advanced Topics in Finance & Accounting'] = 'Topics F&A';
 
 
         //Do the replacement
         $summary = strtr($summary, $searchReplace);
 
         //Remove some stuff which is not really needed
-        $summary = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, ', 'VI, ', 'TT, ', 'UE, ', 'SE, '], '', $summary);
+        $summary = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, ', 'VI, ', 'TT, ', 'UE, ', 'SE, ','(Limited places) ', '(Online)'], '', $summary);
 
         //Try to make sense out of the location
         if (preg_match('/^(.*?),.*(\d{4})\.(?:\d\d|EG|UG|DG|Z\d|U\d)\.\d+/', $location, $matches) === 1) {
