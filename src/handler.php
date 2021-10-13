@@ -150,15 +150,15 @@ class handler {
      * @param $events
      */
     public static function noDupes(array &$events) {
-        //Sort them
+        //Sort them, first by starttime and then by title
         usort($events, function (Event $a, Event $b) {
             if (strtotime($a->dtstart) > strtotime($b->dtstart)) {
                 return 1;
             } else if ($a->dtstart > $b->dtstart) {
                 return -1;
             }
-
-            return 0;
+            //sort coinciding events according to their title
+            return strcmp($a->summary, $b->summary);
         });
 
         //Find dupes
@@ -168,13 +168,13 @@ class handler {
             if ($events[$i - 1]->dtstart === $events[$i]->dtstart
                 && $events[$i - 1]->dtend === $events[$i]->dtend
                 && $events[$i - 1]->summary === $events[$i]->summary) {
-                //if this and next event are the same, check whether the next is held in interims
-                if (strpos($events[$i]->location, "Interims")) {
-                    //Append the location from the next (same) element to this element
-                    $events[$i - 1]->location .= "\n" . $events[$i]->location;
-                    //Mark next element for removal
-                    unset($events[$i]);
-                    $i--;
+                //if this and next event are the same, check whether the next is a livestream
+                if (strpos($events[$i]->description, "Videoübertragung")) {
+                    //Append the location to the next (same) element and switch the descriptions around
+                    $events[$i]->location = $events[$i - 1]->location . "\n" . $events[$i]->location;
+                    $events[$i]->description = $events[$i - 1]->description;
+                    //Mark this element for removal
+                    unset($events[$i - 1]);
                 } else {
                     //Append the location to the next (same) element
                     $events[$i]->location .= "\n" . $events[$i - 1]->location;
