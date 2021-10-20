@@ -154,7 +154,7 @@ class handler {
         usort($events, function (Event $a, Event $b) {
             if (strtotime($a->dtstart) > strtotime($b->dtstart)) {
                 return 1;
-            } else if ($a->dtstart > $b->dtstart) {
+            } else if (strtotime($a->dtstart) < strtotime($b->dtstart)) {
                 return -1;
             }
             //sort coinciding events according to their title
