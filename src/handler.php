@@ -88,8 +88,8 @@ class handler {
         $searchReplace['Business Analytics and Machine Learning'] = 'BA & ML';
         $searchReplace['Netzsicherheit'] = 'NetSec';
         $searchReplace['Management Accounting'] = 'MA';
-        $searchReplace['Advanced Seminar Finance & Accounting'] = 'Seminar F&A';
-        $searchReplace['Advanced Topics in Finance & Accounting'] = 'Topics F&A';
+        $searchReplace['Advanced Seminar Finance &amp; Accounting'] = 'Seminar F&A';
+        $searchReplace['Advanced Topics in Finance &amp; Accounting'] = 'Topics F&A';
 
 
         //Do the replacement
