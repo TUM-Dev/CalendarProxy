@@ -43,6 +43,7 @@ class handler {
         $searchReplace = [];
         $searchReplace['Tutorübungen'] = 'TÜ';
         $searchReplace['Grundlagen'] = 'G';
+        $searchReplace['Introduction'] = 'I';
         $searchReplace['Datenbanken'] = 'DB';
         $searchReplace['Zentralübungen'] = 'ZÜ';
         $searchReplace['Zentralübung'] = 'ZÜ';
@@ -90,6 +91,8 @@ class handler {
         $searchReplace['Management Accounting'] = 'MA';
         $searchReplace['Advanced Seminar Finance &amp; Accounting'] = 'Seminar F&A';
         $searchReplace['Advanced Topics in Finance &amp; Accounting'] = 'Topics F&A';
+        $searchReplace['Maschinelles Lernen'] = 'ML';
+        $searchReplace[' to Deep Learning'] = 'I2DL';
 
 
         //Do the replacement
