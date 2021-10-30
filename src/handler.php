@@ -49,7 +49,7 @@ class handler {
 
         //Clean up extra info for language course names
         if(preg_match('/(Spanisch|Französisch)\s(A|B|C)(1|2)((\.(1|2))|(\/(A|B|C)(1|2)))?(\s)/', $summary, $matches, PREG_OFFSET_CAPTURE) === 1){
-            $summary = substr($summary, 0, $matches[10]);
+            $summary = substr($summary, 0, $matches[10][1]);
         }
 
         //Try to make sense out of the location
