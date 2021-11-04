@@ -87,7 +87,7 @@ class handler {
         $searchReplace['Praktikum - iPraktikum, iOS Praktikum'] = 'iPraktikum';
         $searchReplace['B1.1+B1.2 (intensiv)'] = 'B1';
         $searchReplace['Maschinelles Lernen'] = 'ML';
-        $searchReplace[' to Deep Learning'] = 'I2DL';
+        $searchReplace[' to Deep Learning'] = '2DL';
 
 
         //Do the replacement
