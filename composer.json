@@ -7,7 +7,7 @@
   },
   "require": {
     "eluceo/ical": "~0.6",
-    "johngrogg/ics-parser": "~2.1"
+    "johngrogg/ics-parser": "~3.0"
   },
   "require-dev": {
     "phpunit/phpunit": "~9.5"
