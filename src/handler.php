@@ -7,11 +7,13 @@ use ICal\Event;
 class handler {
 
     /** Associative array that maps building-ids to addresses */
-    private $buildings;
+    private $buildings, $courses;
+
 
     public function __construct() {
         // Load building addresses from file
         $this->buildings = json_decode(file_get_contents("buildings.json"), true);
+        $this->courses = json_decode(file_get_contents("courses.json"), true);
     }
 
     /**
@@ -31,7 +33,7 @@ class handler {
         $event->setLocation($location);
 
         //Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
-        $summary = preg_replace('/([(\[](?:(?:IN|MA|WI)\d+,?\s?)+[)\]]).+/', '', $summary);
+        $summary = preg_replace('/([(\[](?:(?:IN|MA|WI|WIB)\d+,?\s?)+[)\]]).+/', '', $summary);
 
         //remove location and teacher from language course title
         $summary = preg_replace('/(München|Garching|Weihenstephan).+/', '', $summary);
@@ -39,62 +41,16 @@ class handler {
         //combine multiple spaces in summary into one
         $summary = preg_replace('/\s\s+/', ' ', $summary);
 
-        //Some common replacements: yes its a long list
-        $searchReplace = [];
-        $searchReplace['Tutorübungen'] = 'TÜ';
-        $searchReplace['Grundlagen'] = 'G';
-        $searchReplace['Introduction'] = 'I';
-        $searchReplace['Datenbanken'] = 'DB';
-        $searchReplace['Zentralübungen'] = 'ZÜ';
-        $searchReplace['Zentralübung'] = 'ZÜ';
-        $searchReplace['Vertiefungsübungen'] = 'VÜ';
-        $searchReplace['Übungen'] = 'Ü';
-        $searchReplace['Übung'] = 'Ü';
-        $searchReplace['Exercise'] = 'EX';
-        $searchReplace['Exercises'] = 'EX';
-        $searchReplace['Software Engineering für betriebliche Anwendungen - Bachelorkurs'] = 'SEBA';
-        $searchReplace['Volkswirtschaftslehre'] = 'VWL';
-        $searchReplace['Funktionale Programmierung und Verifikation'] = 'FPV';
-        $searchReplace['Buchführung und Rechnungswesen'] = 'BF & RW';
-        $searchReplace['Planen und Entscheiden in betrieblichen Informationssystemen - Wirtschaftsinformatik 4'] = 'PLEBIS';
-        $searchReplace['Planen und Entscheiden in betrieblichen Informationssystemen'] = 'PLEBIS';
-        $searchReplace['Statistics for Business Administration (with Introduction to R)'] = 'Stats';
-        $searchReplace['Kostenrechnung für Wirtschaftsinformatik und Nebenfach'] = 'KR';
-        $searchReplace['Kostenrechnung'] = 'KR';
-        $searchReplace['Mathematische Behandlung der Natur- und Wirtschaftswissenschaften (Mathematik 1)'] = 'MBNW';
-        $searchReplace['Einführung in die Wirtschaftsinformatik'] = 'WINFO';
-        $searchReplace['Projektorganisation und -management in der Softwaretechnik'] = 'POM';
-        $searchReplace['Empirical Research Methods'] = 'ERM';
-        $searchReplace['Informationsmanagement'] = 'IM';
-        $searchReplace['Bachelor-Seminar: Digitale Hochschule: Aktuelle Trends und Herausforderungen'] = 'Digitale Hochschule';
-        $searchReplace['Betriebssysteme und Systemsoftware'] = 'BS';
-        $searchReplace['Einführung in die Informatik '] = 'INFO';
-        $searchReplace['Praktikum: Grundlagen der Programmierung'] = 'PGP';
-        $searchReplace['Einführung in die Rechnerarchitektur'] = 'ERA';
-        $searchReplace['Einführung in die Softwaretechnik'] = 'EIST';
-        $searchReplace['Algorithmen und Datenstrukturen'] = 'AD';
-        $searchReplace['Rechnernetze und Verteilte Systeme'] = 'RNVS';
-        $searchReplace['Einführung in die Theoretische Informatik'] = 'THEO';
-        $searchReplace['Diskrete Strukturen'] = 'DS';
-        $searchReplace['Diskrete Wahrscheinlichkeitstheorie'] = 'DWT';
-        $searchReplace['Numerisches Programmieren'] = 'NumProg';
-        $searchReplace['Modellbildung und Simulation'] = 'ModSim';
-        $searchReplace['(Fokus Analysis)'] = '(Ana)';
-        $searchReplace['Lineare Algebra für Informatik'] = 'LinAlg';
-        $searchReplace['Analysis für Informatik'] = 'Analysis';
-        $searchReplace[' der Künstlichen Intelligenz'] = 'KI';
-        $searchReplace['Advanced Topics of Software Engineering'] = 'ASE';
-        $searchReplace['Praktikum - iPraktikum, iOS Praktikum'] = 'iPraktikum';
-        $searchReplace['B1.1+B1.2 (intensiv)'] = 'B1';
-        $searchReplace['Maschinelles Lernen'] = 'ML';
-        $searchReplace[' to Deep Learning'] = '2DL';
-
-
         //Do the replacement
-        $summary = strtr($summary, $searchReplace);
+        $summary = strtr($summary, $this->courses);
 
         //Remove some stuff which is not really needed
-        $summary = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, ', 'VI, ', 'TT, ', 'UE, ', 'SE, '], '', $summary);
+        $summary = str_replace(['Standardgruppe', 'PR, ', 'VO, ', 'FA, ', 'VI, ', 'TT, ', 'UE, ', 'SE, ','(Limited places) ', '(Online)'], '', $summary);
+
+        //Clean up extra info for language course names
+        if(preg_match('/(Spanisch|Französisch)\s(A|B|C)(1|2)((\.(1|2))|(\/(A|B|C)(1|2)))?(\s)/', $summary, $matches, PREG_OFFSET_CAPTURE) === 1){
+            $summary = substr($summary, 0, $matches[10][1]);
+        }
 
         //Try to make sense out of the location
         if (preg_match('/^(.*?),.*(\d{4})\.(?:\d\d|EG|UG|DG|Z\d|U\d)\.\d+/', $location, $matches) === 1) {
@@ -148,15 +104,15 @@ class handler {
      * @param $events
      */
     public static function noDupes(array &$events) {
-        //Sort them
+        //Sort them, first by starttime and then by title
         usort($events, function (Event $a, Event $b) {
             if (strtotime($a->dtstart) > strtotime($b->dtstart)) {
                 return 1;
-            } else if ($a->dtstart > $b->dtstart) {
+            } else if (strtotime($a->dtstart) < strtotime($b->dtstart)) {
                 return -1;
             }
-
-            return 0;
+            //sort coinciding events according to their title
+            return strcmp($a->summary, $b->summary);
         });
 
         //Find dupes
@@ -166,13 +122,13 @@ class handler {
             if ($events[$i - 1]->dtstart === $events[$i]->dtstart
                 && $events[$i - 1]->dtend === $events[$i]->dtend
                 && $events[$i - 1]->summary === $events[$i]->summary) {
-                //if this and next event are the same, check whether the next is held in interims
-                if (strpos($events[$i]->location, "Interims")) {
-                    //Append the location from the next (same) element to this element
-                    $events[$i - 1]->location .= "\n" . $events[$i]->location;
-                    //Mark next element for removal
-                    unset($events[$i]);
-                    $i--;
+                //if this and next event are the same, check whether the next is a livestream
+                if (strpos($events[$i]->description, "Videoübertragung")) {
+                    //Append the location to the next (same) element and switch the descriptions around
+                    $events[$i]->location = $events[$i - 1]->location . "\n" . $events[$i]->location;
+                    $events[$i]->description = $events[$i - 1]->description;
+                    //Mark this element for removal
+                    unset($events[$i - 1]);
                 } else {
                     //Append the location to the next (same) element
                     $events[$i]->location .= "\n" . $events[$i - 1]->location;
