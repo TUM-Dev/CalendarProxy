@@ -28,7 +28,7 @@
 
         <h2>HowTo</h2>
         <ol>
-            <li>Grab the URL from the <a href="https://campus.tum.de/tumonline/wbKalender.wbPerson">TUMO calendar</a> via the 'Veröffentlichen' button</li>
+            <li>Navigate to your calendar in TUMOnline and grab the URL via the 'Veröffentlichen' button</li>
             <li>
                 <label for="tumCalLink">Provide your calendar link:</label>
                 <div class="inputWrapper">
@@ -54,7 +54,7 @@
         <br/>
         <br/>
 
-        <span style="font-size:10px;color:#aaa;">Version v1.2 - <a href="https://github.com/kordianbruck/TumCalProxy/commits/master">Changelog</a></span>
+        <span style="font-size:10px;color:#aaa;">Version v1.2 - <a href="https://github.com/TUM-Dev/CalendarProxy/commits/master">Changelog</a></span>
     </div>
 </div>
 </body>
