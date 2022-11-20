@@ -14,7 +14,6 @@ if (!preg_match('!/$!', $appPath)) {
 //Store in constants
 define('APPLICATION_PATH', $appPath);
 define('TIMEZONE', 'Europe/Berlin');
-ini_set('memory_limit', 8589934592);
 
 //Setup Timezone
 $defaultTimeZone = new \DateTimeZone(TIMEZONE);
@@ -24,7 +23,7 @@ date_default_timezone_set(TIMEZONE);
 require $appPath . './vendor/autoload.php';
 
 //Don't output errors
-error_reporting(E_ALL);
+error_reporting(E_ALL & ~E_USER_DEPRECATED);
 ini_set('display_errors', 0);
 
 //Make sure php is using utf as well as the output is recognized as utf8
