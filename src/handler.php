@@ -2,7 +2,6 @@
 
 namespace CalProxy;
 
-use ICal\Event;
 
 class handler {
 
@@ -20,8 +19,8 @@ class handler {
      * Parse the event and do the replacement and optimizations
      * @param $e Event a single ical event that should be cleaned up
      */
-    public function cleanEvent(Event &$e) {
-        $event = new \Eluceo\iCal\Component\Event();
+    public function cleanEvent(\ICal\Event &$e) {
+        $event = new \Eluceo\iCal\Domain\Entity\Event(new \Eluceo\iCal\Domain\ValueObject\UniqueIdentifier($e->uid));
 
         //Strip added slashes by the parser
         $summary = stripcslashes($e->summary);
@@ -30,7 +29,7 @@ class handler {
 
         //Remember the old title in the description
         $event->setDescription($summary . "\n" . $description);
-        $event->setLocation($location);
+        $event->setLocation(new \Eluceo\iCal\Domain\ValueObject\Location($location));
 
         //Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
         $summary = preg_replace('/([(\[](?:(?:IN|MA|WI|WIB)\d+,?\s?)+[)\]]).+/', '', $summary);
@@ -66,23 +65,24 @@ class handler {
         switch ($e->status) {
             default:
             case 'CONFIRMED':
-                $event->setStatus(\Eluceo\iCal\Component\Event::STATUS_CONFIRMED);
+                $event->setStatus(\Eluceo\iCal\Domain\Enum\EventStatus::CONFIRMED());
                 break;
             case 'CANCELLED':
-                $event->setStatus(\Eluceo\iCal\Component\Event::STATUS_CANCELLED);
+                $event->setStatus(\Eluceo\iCal\Domain\Enum\EventStatus::CANCELLED());
                 break;
             case 'TENTATIVE':
-                $event->setStatus(\Eluceo\iCal\Component\Event::STATUS_TENTATIVE);
+                $event->setStatus(\Eluceo\iCal\Domain\Enum\EventStatus::TENTATIVE());
                 break;
         }
 
         //Add all fields
-        $event->setUniqueId($e->uid)
-            ->setDtStamp(new \DateTime($e->dtstamp))
-            //->setUrl($e->)
+        $event
+            ->touch(new \Eluceo\iCal\Domain\ValueObject\Timestamp(new \DateTime($e->dtstamp)))
             ->setSummary($summary)
-            ->setDtStart(new \DateTime($e->dtstart))
-            ->setDtEnd(new \DateTime($e->dtend));
+            ->setOccurrence(new \Eluceo\iCal\Domain\ValueObject\TimeSpan(
+                new \Eluceo\iCal\Domain\ValueObject\DateTime(new \DateTime($e->dtstart), false),
+                new \Eluceo\iCal\Domain\ValueObject\DateTime(new \DateTime($e->dtend), false),
+            ));
 
         return $event;
     }
@@ -94,9 +94,9 @@ class handler {
      * @param $e array element to be edited
      * @param $newLoc string new location that should be set to the element
      */
-    public static function switchLocation(\Eluceo\iCal\Component\Event &$e, $oldLocation, $newLoc) {
+    public static function switchLocation(\Eluceo\iCal\Domain\Entity\Event &$e, $oldLocation, $newLoc) {
         $e->setDescription($oldLocation . "\n" . $e->getDescription());
-        $e->setLocation($newLoc, $oldLocation);
+        $e->setLocation(new \Eluceo\iCal\Domain\ValueObject\Location($newLoc, $oldLocation));
     }
 
     /**
@@ -105,7 +105,7 @@ class handler {
      */
     public static function noDupes(array &$events) {
         //Sort them, first by starttime and then by title
-        usort($events, function (Event $a, Event $b) {
+        usort($events, function (\ICal\Event $a, \ICal\Event $b) {
             if (strtotime($a->dtstart) > strtotime($b->dtstart)) {
                 return 1;
             } else if (strtotime($a->dtstart) < strtotime($b->dtstart)) {
