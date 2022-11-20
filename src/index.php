@@ -21,8 +21,7 @@ $defaultTimeZone = new \DateTimeZone(TIMEZONE);
 date_default_timezone_set(TIMEZONE);
 
 //Include composer components
-require $appPath . '../vendor/autoload.php';
-require $appPath . 'handler.php';
+require $appPath . './vendor/autoload.php';
 
 //Don't output errors
 error_reporting(E_ALL);
