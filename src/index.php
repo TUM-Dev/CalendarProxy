@@ -1,4 +1,7 @@
 <?php
+//Don't output errors and disable deprecation warnings
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+ini_set('display_errors', 0);
 
 use Eluceo\iCal\Domain\Entity\Calendar;
 use Eluceo\iCal\Domain\Entity\TimeZone;
@@ -21,10 +24,6 @@ date_default_timezone_set(TIMEZONE);
 
 //Include composer components
 require $appPath . './vendor/autoload.php';
-
-//Don't output errors
-error_reporting(E_ALL & ~E_USER_DEPRECATED);
-ini_set('display_errors', 0);
 
 //Make sure php is using utf as well as the output is recognized as utf8
 mb_internal_encoding('UTF-8');
