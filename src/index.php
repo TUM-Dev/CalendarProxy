@@ -6,7 +6,6 @@ ini_set('display_errors', 0);
 use Eluceo\iCal\Domain\Entity\Calendar;
 use Eluceo\iCal\Domain\Entity\TimeZone;
 use ICal\ICal;
-use DateTimeZone as PhpDateTimeZone;
 
 //Global absolute path
 $appPath = realpath(dirname(__FILE__));
@@ -16,7 +15,7 @@ if (!preg_match('!/$!', $appPath)) {
 
 //Store in constants
 define('APPLICATION_PATH', $appPath);
-define('TIMEZONE', 'Europe/Berlin');
+const TIMEZONE = 'Europe/Berlin';
 
 //Setup Timezone
 $defaultTimeZone = new \DateTimeZone(TIMEZONE);
@@ -68,6 +67,12 @@ foreach ($allEvents as $e) {
 
 //Create new object for outputting the new calendar
 $calendar = new Calendar($newEvents);
+$timeZone = TimeZone::createFromPhpDateTimeZone(
+    $defaultTimeZone,
+    new DateTimeImmutable('2021-01-01 15:00:00', $defaultTimeZone),
+    new DateTimeImmutable('2025-12-31 18:00:00', $defaultTimeZone),
+);
+$calendar->addTimeZone($timeZone);
 
 // 3. Transform domain entity into an iCalendar component
 $componentFactory = new Eluceo\iCal\Presentation\Factory\CalendarFactory();
