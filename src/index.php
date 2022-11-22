@@ -23,7 +23,7 @@ $defaultTimeZone = new \DateTimeZone(TIMEZONE);
 date_default_timezone_set(TIMEZONE);
 
 //Include composer components
-require $appPath . './vendor/autoload.php';
+require $appPath . '../vendor/autoload.php';
 
 //Make sure php is using utf as well as the output is recognized as utf8
 mb_internal_encoding('UTF-8');
