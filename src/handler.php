@@ -80,8 +80,8 @@ class handler {
             ->touch(new \Eluceo\iCal\Domain\ValueObject\Timestamp(new \DateTime($e->dtstamp)))
             ->setSummary($summary)
             ->setOccurrence(new \Eluceo\iCal\Domain\ValueObject\TimeSpan(
-                new \Eluceo\iCal\Domain\ValueObject\DateTime(new \DateTime($e->dtstart), false),
-                new \Eluceo\iCal\Domain\ValueObject\DateTime(new \DateTime($e->dtend), false),
+                new \Eluceo\iCal\Domain\ValueObject\DateTime(new \DateTime($e->dtstart), true),
+                new \Eluceo\iCal\Domain\ValueObject\DateTime(new \DateTime($e->dtend), true),
             ));
 
         return $event;
