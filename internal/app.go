@@ -74,16 +74,24 @@ func (a *App) handleIcal(c *gin.Context) {
 		return
 	}
 	hasLecture := make(map[string]bool)
-	for i, event := range cal.Events() {
-		dedupKey := fmt.Sprintf("%s-%s", event.GetProperty(ics.ComponentPropertySummary).Value, event.GetProperty(ics.ComponentPropertyDtStart))
-		if _, ok := hasLecture[dedupKey]; ok {
-			cal.Events()[i] = nil
-			log.Println("skipping ", dedupKey)
-			continue
+	var newComponents []ics.Component
+	for _, component := range cal.Components {
+		switch component.(type) {
+		case *ics.VEvent:
+			event := component.(*ics.VEvent)
+			dedupKey := fmt.Sprintf("%s-%s", event.GetProperty(ics.ComponentPropertySummary).Value, event.GetProperty(ics.ComponentPropertyDtStart))
+			if _, ok := hasLecture[dedupKey]; ok {
+				log.Println("skipping ", dedupKey)
+				continue
+			}
+			hasLecture[dedupKey] = true
+			a.cleanEvent(event)
+			newComponents = append(newComponents, event)
+		default:
+			newComponents = append(newComponents, component)
 		}
-		hasLecture[dedupKey] = true
-		a.cleanEvent(event)
 	}
+	cal.Components = newComponents
 
 	response := []byte(cal.Serialize())
 	c.Header("Content-Type", "text/calendar")
