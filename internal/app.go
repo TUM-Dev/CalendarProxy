@@ -55,19 +55,22 @@ func (a *App) handleIcal(c *gin.Context) {
 	stud := c.Query("pStud")
 	token := c.Query("pToken")
 	if stud == "" || token == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, "missing stud or token")
 		return
 	}
-	log.Println(stud, token)
 	resp, err := http.Get(fmt.Sprintf(src, stud, token))
 	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
 	all, err := io.ReadAll(resp.Body)
 	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
 	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
 	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
 	hasLecture := make(map[string]bool)
