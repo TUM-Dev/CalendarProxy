@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"embed"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -20,6 +21,9 @@ var coursesJson string
 
 //go:embed buildings.json
 var buildingsJson string
+
+//go:embed static
+var static embed.FS
 
 type App struct {
 	engine *gin.Engine
@@ -46,6 +50,8 @@ func (a *App) Run() error {
 
 func (a *App) configRoutes() {
 	a.engine.Any("/", a.handleIcal)
+	f := http.FS(static)
+	a.engine.StaticFS("/files/", f)
 	a.engine.NoMethod(func(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotImplemented)
 	})
@@ -55,7 +61,12 @@ func (a *App) handleIcal(c *gin.Context) {
 	stud := c.Query("pStud")
 	token := c.Query("pToken")
 	if stud == "" || token == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, "missing stud or token")
+		f, err := static.Open("static/index.html")
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+			return
+		}
+		io.Copy(c.Writer, f)
 		return
 	}
 	resp, err := http.Get(fmt.Sprintf(src, stud, token))
