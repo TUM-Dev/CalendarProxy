@@ -2,19 +2,16 @@ package internal
 
 import (
 	"embed"
-	_ "embed"
 	"encoding/json"
 	"fmt"
-	ics "github.com/arran4/golang-ical"
-	"github.com/gin-gonic/gin"
 	"io"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
-)
 
-const src = "https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s"
+	ics "github.com/arran4/golang-ical"
+	"github.com/gin-gonic/gin"
+)
 
 //go:embed courses.json
 var coursesJson string
@@ -32,15 +29,25 @@ type App struct {
 	buildingReplacements map[string]string
 }
 
-func (a *App) Run() error {
+func newApp() (*App, error) {
+	a := App{}
 	err := json.Unmarshal([]byte(coursesJson), &a.courseReplacements)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = json.Unmarshal([]byte(buildingsJson), &a.buildingReplacements)
 	if err != nil {
+		return nil, err
+	}
+	return &a, nil
+}
+
+func (a *App) Run() error {
+	newApp, err := newApp()
+	if err != nil {
 		return err
 	}
+	a = newApp
 	gin.SetMode("release")
 	a.engine = gin.New()
 	a.engine.Use(gin.Logger(), gin.Recovery())
@@ -69,7 +76,7 @@ func (a *App) handleIcal(c *gin.Context) {
 		io.Copy(c.Writer, f)
 		return
 	}
-	resp, err := http.Get(fmt.Sprintf(src, stud, token))
+	resp, err := http.Get(fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
@@ -79,35 +86,44 @@ func (a *App) handleIcal(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
-	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
+	cleaned, err := a.getCleanedCalendar(all)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+	response := []byte(cleaned.Serialize())
+	c.Header("Content-Type", "text/calendar")
+	c.Header("Content-Length", fmt.Sprintf("%d", len(response)))
+	c.Writer.Write(response)
+}
+
+func (a *App) getCleanedCalendar(all []byte) (*ics.Calendar, error) {
+	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
+	if err != nil {
+		return nil, err
+	}
+
+	// Create map that tracks if we have allready seen a lecture name & datetime (e.g. "lecturexyz-1.2.2024 10:00" -> true)
 	hasLecture := make(map[string]bool)
-	var newComponents []ics.Component
+	var newComponents []ics.Component // saves the components we keep because they are not duplicated
+
 	for _, component := range cal.Components {
 		switch component.(type) {
 		case *ics.VEvent:
 			event := component.(*ics.VEvent)
 			dedupKey := fmt.Sprintf("%s-%s", event.GetProperty(ics.ComponentPropertySummary).Value, event.GetProperty(ics.ComponentPropertyDtStart))
 			if _, ok := hasLecture[dedupKey]; ok {
-				log.Println("skipping ", dedupKey)
 				continue
 			}
-			hasLecture[dedupKey] = true
+			hasLecture[dedupKey] = true // mark event as seen
 			a.cleanEvent(event)
 			newComponents = append(newComponents, event)
-		default:
+		default: // keep everything that is not an event (metadata etc.)
 			newComponents = append(newComponents, component)
 		}
 	}
 	cal.Components = newComponents
-
-	response := []byte(cal.Serialize())
-	c.Header("Content-Type", "text/calendar")
-	c.Header("Content-Length", fmt.Sprintf("%d", len(response)))
-	c.Writer.Write(response)
+	return cal, nil
 }
 
 // matches tags like (IN0001) or [MA2012] and everything after.
@@ -148,14 +164,6 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 	for _, replace := range unneeded {
 		summary = strings.ReplaceAll(summary, replace, "")
 	}
-
-	/*
-			todo, whatever this does:
-			//Clean up extra info for language course names
-		    if(preg_match('/(Spanisch|Französisch)\s(A|B|C)(1|2)((\.(1|2))|(\/(A|B|C)(1|2)))?(\s)/', $summary, $matches, PREG_OFFSET_CAPTURE) === 1){
-		       $summary = substr($summary, 0, $matches[10][1]);
-		    }
-	*/
 
 	event.SetSummary(summary)
 
