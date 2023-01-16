@@ -52,7 +52,7 @@ func (a *App) Run() error {
 	a.engine = gin.New()
 	a.engine.Use(gin.Logger(), gin.Recovery())
 	a.configRoutes()
-	return a.engine.Run()
+	return a.engine.Run(":80")
 }
 
 func (a *App) configRoutes() {

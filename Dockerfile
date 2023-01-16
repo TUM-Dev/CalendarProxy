@@ -13,6 +13,6 @@ FROM scratch
 COPY --from=builder /proxy /proxy
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-EXPOSE 8080
+EXPOSE 80
 
 CMD ["/proxy"]
