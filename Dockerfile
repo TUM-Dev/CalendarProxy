@@ -1,12 +1,18 @@
-FROM composer:2.4.4 as composer
+FROM golang:1.19-alpine3.17 as builder
+
+# Ca-certificates are required to call HTTPS endpoints.
+RUN apk update && apk add --no-cache ca-certificates tzdata alpine-sdk bash && update-ca-certificates
 
 WORKDIR /app
-COPY ./composer.json /app
-COPY ./composer.lock /app
+COPY . .
 
-RUN composer install --no-dev
+RUN CGO_ENABLED=0 go build -ldflags="-extldflags=-static" -o /proxy cmd/proxy/proxy.go
 
-FROM webdevops/php-nginx:8.2-alpine
-ENV WEB_DOCUMENT_ROOT=/app/public
-COPY ./src /app/public
-COPY --from=composer /app /app
+FROM scratch
+
+COPY --from=builder /proxy /proxy
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+EXPOSE 80
+
+CMD ["/proxy"]
