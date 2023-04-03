@@ -152,9 +152,20 @@ var unneeded = []string{
 var reRoom = regexp.MustCompile("^(.*?),.*(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\\d)\\.\\d+")
 
 func (a *App) cleanEvent(event *ics.VEvent) {
-	summary := strings.ReplaceAll(event.GetProperty(ics.ComponentPropertySummary).Value, "\\", "")
-	description := strings.ReplaceAll(event.GetProperty(ics.ComponentPropertyDescription).Value, "\\", "")
-	location := strings.ReplaceAll(event.GetProperty(ics.ComponentPropertyLocation).Value, "\\", "")
+	summary := ""
+	if s := event.GetProperty(ics.ComponentPropertySummary); s != nil {
+		summary = strings.ReplaceAll(s.Value, "\\", "")
+	}
+
+	description := ""
+	if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
+		description = strings.ReplaceAll(d.Value, "\\", "")
+	}
+
+	location := ""
+	if l := event.GetProperty(ics.ComponentPropertyLocation); l != nil {
+		location = strings.ReplaceAll(event.GetProperty(ics.ComponentPropertyLocation).Value, "\\", "")
+	}
 
 	//Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
 	summary = reTag.ReplaceAllString(summary, "")
