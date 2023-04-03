@@ -11,6 +11,7 @@
   "Exercise": "EX",
   "Exercises": "EX",
   "Software Engineering für betriebliche Anwendungen - Bachelorkurs": "SEBA",
+  "Software Engineering für betriebliche Anwendungen - Masterkurs: Web Application Engineering": "SEBA",
   "Betriebswirtschaftslehre": "BWL",
   "Volkswirtschaftslehre": "VWL",
   "Funktionale Programmierung und Verifikation": "FPV",
@@ -55,5 +56,8 @@
   "Advanced Seminar Finance &amp; Accounting": "Seminar F&A",
   "Advanced Topics in Finance &amp; Accounting": "Topics F&A",
   "Maschinelles Lernen": "ML",
-  " to Deep Learning": "2DL"
+  " to Deep Learning": "2DL",
+  "Security Engineering": "SecE",
+  "Peer-to-Peer-Systeme und Sicherheit": "P2PSec"
+  "Requirements Engineering": "ReqE",
 }
