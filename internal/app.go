@@ -214,8 +214,8 @@ func (a *App) getCleanedCalendar(all []byte, filterTags []string) (*ics.Calendar
 // unfortunate also matches wrong brackets like [MA123) but hey…
 var reTag = regexp.MustCompile(" ?[\\[(](MA|IN|WI|WIB)[0-9]+((_|-|,)[a-zA-Z0-9]+)*[\\])].*")
 
-// matches tags only, and captures the tag only in the first group (e.g., "IN0001")
-var reTagOnly = regexp.MustCompile(" ?[[(]((?:MA|IN|WI|WIB|CIT)[0-9]+)[[)]")
+// matches tags only, and captures the tag in the first group (e.g., "IN0001")
+var reTagOnly = regexp.MustCompile("[[(]((?:MA|IN|WI|WIB|CIT)[0-9]+)(?:(?:_|-|,|\\\\)[ a-zA-Z0-9\\\\]*)*[])]")
 
 // Matches location and teacher from language course title
 var reLoc = regexp.MustCompile(" ?(München|Garching|Weihenstephan).+")
