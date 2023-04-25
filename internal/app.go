@@ -56,6 +56,7 @@ func (a *App) Run() error {
 }
 
 func (a *App) configRoutes() {
+	a.engine.GET("/api/courses", a.handleGetCourses)
 	a.engine.Any("/", a.handleIcal)
 	f := http.FS(static)
 	a.engine.StaticFS("/files/", f)
@@ -65,39 +66,111 @@ func (a *App) configRoutes() {
 }
 
 func (a *App) handleIcal(c *gin.Context) {
-	stud := c.Query("pStud")
-	token := c.Query("pToken")
-	if stud == "" || token == "" {
-		f, err := static.Open("static/index.html")
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
-			return
-		}
-		io.Copy(c.Writer, f)
+	calData := readTumCalendarFromParams(c)
+	if calData == nil {
 		return
 	}
-	resp, err := http.Get(fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token))
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
-		return
-	}
-	all, err := io.ReadAll(resp.Body)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
-		return
-	}
-	cleaned, err := a.getCleanedCalendar(all)
+
+	filterTags := c.QueryArray("filterTag")
+	cleaned, err := a.getCleanedCalendar(calData, filterTags)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+
 	response := []byte(cleaned.Serialize())
 	c.Header("Content-Type", "text/calendar")
 	c.Header("Content-Length", fmt.Sprintf("%d", len(response)))
 	c.Writer.Write(response)
 }
 
-func (a *App) getCleanedCalendar(all []byte) (*ics.Calendar, error) {
+func (a *App) handleGetCourses(c *gin.Context) {
+	calData := readTumCalendarFromParams(c)
+	if calData == nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	cal, err := ics.ParseCalendar(strings.NewReader(string(calData)))
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	// detect all courses, store lecture tag -> lecture summary / name mapping
+	coursesByTag := make(map[string]string)
+	for _, component := range cal.Components {
+		switch component.(type) {
+		case *ics.VEvent:
+			event := component.(*ics.VEvent)
+			eventSummary := event.GetProperty(ics.ComponentPropertySummary).Value
+			lectureTag := extractTag(eventSummary)
+
+			if lectureTag != "" {
+				coursesByTag[lectureTag] = eventSummary
+			}
+
+		default:
+			break
+		}
+	}
+
+	// send back the mapping via JSON
+	coursesJson, err := json.Marshal(coursesByTag)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.Header("Content-Type", "application/json")
+	c.Header("Content-Length", fmt.Sprintf("%d", len(coursesJson)))
+	c.Writer.Write(coursesJson)
+}
+
+func readTumCalendarFromParams(c *gin.Context) []byte {
+	stud := c.Query("pStud")
+	token := c.Query("pToken")
+
+	if stud == "" || token == "" {
+		f, err := static.Open("static/index.html")
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+			return nil
+		}
+		io.Copy(c.Writer, f)
+		return nil
+	}
+
+	resp, err := http.Get(fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return nil
+	}
+	all, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return nil
+	}
+
+	return all
+}
+
+func summaryContainsAnyTag(summary string, filterTags []string) (bool, error) {
+	for _, tag := range filterTags {
+		// wrap the tag in brackets [] or ()
+		regexPattern := fmt.Sprintf(`(\[%s\]|\(%s\))`, tag, tag)
+		matched, err := regexp.MatchString(regexPattern, summary)
+		if err != nil {
+			return false, err
+		}
+		if matched {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (a *App) getCleanedCalendar(all []byte, filterTags []string) (*ics.Calendar, error) {
 	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
 	if err != nil {
 		return nil, err
@@ -111,6 +184,17 @@ func (a *App) getCleanedCalendar(all []byte) (*ics.Calendar, error) {
 		switch component.(type) {
 		case *ics.VEvent:
 			event := component.(*ics.VEvent)
+
+			// check if the summary contains any of the filtered keys, and if yes, skip it
+			eventSummary := event.GetProperty(ics.ComponentPropertySummary).Value
+			shouldFilterEvent, err := summaryContainsAnyTag(eventSummary, filterTags)
+			if err != nil {
+				return nil, err
+			}
+			if shouldFilterEvent {
+				continue
+			}
+
 			dedupKey := fmt.Sprintf("%s-%s", event.GetProperty(ics.ComponentPropertySummary).Value, event.GetProperty(ics.ComponentPropertyDtStart))
 			if _, ok := hasLecture[dedupKey]; ok {
 				continue
@@ -129,6 +213,9 @@ func (a *App) getCleanedCalendar(all []byte) (*ics.Calendar, error) {
 // matches tags like (IN0001) or [MA2012] and everything after.
 // unfortunate also matches wrong brackets like [MA123) but hey…
 var reTag = regexp.MustCompile(" ?[\\[(](MA|IN|WI|WIB)[0-9]+((_|-|,)[a-zA-Z0-9]+)*[\\])].*")
+
+// matches tags only, and captures the tag only in the first group (e.g., "IN0001")
+var reTagOnly = regexp.MustCompile(" ?[[(]((?:MA|IN|WI|WIB|CIT)[0-9]+)[[)]")
 
 // Matches location and teacher from language course title
 var reLoc = regexp.MustCompile(" ?(München|Garching|Weihenstephan).+")
@@ -203,4 +290,15 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 	case "TENTATIVE":
 		event.SetStatus(ics.ObjectStatusTentative)
 	}
+}
+
+func extractTag(s string) string {
+	if s == "" {
+		return ""
+	}
+	matches := reTagOnly.FindStringSubmatch(s)
+	if len(matches) == 2 {
+		return matches[1]
+	}
+	return ""
 }

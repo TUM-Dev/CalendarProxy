@@ -47,6 +47,7 @@
           </li>
           <li>Replaces 'Tutorübung' with 'TÜ'</li>
           <li>Remove event duplicates due to multiple rooms</li>
+          <li>Allows you to hide courses in your calendar without de-registering in TUMOnline</li>
         </ul>
 
         <h2>HowTo</h2>
@@ -62,6 +63,7 @@
                 type="url"
                 id="tumCalLink"
                 placeholder="https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=abc&pToken=xyz"
+                oninput="reloadCourses()"
               />
               <button id="generateLinkBtn" onclick="generateLink()">
                 Generate & Copy
@@ -83,6 +85,14 @@
             >https://cal.tum.app/?pStud=ABCDEF&amp;pToken=XYZ</a
           >
         </i>
+
+        <div id="courseFilterDiv" hidden>
+          <h2>Filter Courses</h2>
+          <p>
+            You can hide courses from your calendar by un-ticking the checkmarks next to them. This allows you to clean up your calendar without deregistering from the course in TUMOnline. Make sure to click the "Generate & Copy" button again after you have made your changes.
+          </p>
+          <ul id="courseFilterList"></ul>
+        </div>
 
         <h3>Contribute / Suggest</h3>
         If you want to suggest something create an issue at
