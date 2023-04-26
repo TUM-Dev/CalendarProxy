@@ -111,7 +111,7 @@ func (a *App) handleGetCourses(c *gin.Context) {
 			}
 
 		default:
-			break
+			continue
 		}
 	}
 

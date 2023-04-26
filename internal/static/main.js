@@ -26,8 +26,9 @@ function generateLink() {
 
     let adjustedLink = calLink.replace(/https:\/\/campus.tum.de\/tumonlinej\/.{2}\/termin\/ical/i, "https://cal.tum.app").replace("\t", "");
     for (const [tag, shouldFilter] of Object.entries(filteredCourses)) {
-        if (shouldFilter)
+        if (shouldFilter) {
             adjustedLink += "&filterTag=" + tag;
+        }
     }
 
     copyToClipboard(adjustedLink);
@@ -47,8 +48,9 @@ function reloadCourses() {
 
     fetch(url)
         .then(response => {
-            if (response.ok)
+            if (response.ok) {
                 return response.json();
+            }
 
             throw new Error(`Failed to fetch courses: ${response.text()}`);
         })
