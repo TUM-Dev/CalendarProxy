@@ -59,5 +59,9 @@
   " to Deep Learning": "2DL",
   "Security Engineering": "SecE",
   "Peer-to-Peer-Systeme und Sicherheit": "P2PSec",
-  "Requirements Engineering": "ReqE"
+  "Requirements Engineering": "ReqE",
+  "Functional Data Structures": "FDS",
+  "Hardware Security": "HWSec",
+  "Algorithmic Game Theory": "AGT",
+  "Fortgeschrittene Themen des Softwaretests": "AdvTest"
 }
