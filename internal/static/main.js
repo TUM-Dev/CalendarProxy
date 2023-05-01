@@ -24,14 +24,18 @@ function generateLink() {
     if (!calLink)
         return;
 
-    let adjustedLink = calLink.replace(/https:\/\/campus.tum.de\/tumonlinej\/.{2}\/termin\/ical/i, "https://cal.tum.app").replace("\t", "");
-    for (const [tag, shouldFilter] of Object.entries(filteredCourses)) {
+    const adjustedLink = new URL(calLink.replace(/https:\/\/campus.tum.de\/tumonlinej\/.{2}\/termin\/ical/i, "https://cal.tum.app").replace("\t", ""));
+
+    // add course filters
+    const queryParams = new URLSearchParams(adjustedLink.search);
+    for (const [courseName, shouldFilter] of Object.entries(filteredCourses)) {
         if (shouldFilter) {
-            adjustedLink += "&filterTag=" + tag;
+            queryParams.append("filter", courseName);
         }
     }
 
-    copyToClipboard(adjustedLink);
+    adjustedLink.search = queryParams;
+    copyToClipboard(adjustedLink.toString());
     setCopyButton("copied")
 }
 
@@ -59,19 +63,22 @@ function reloadCourses() {
             const courseFilterList = document.getElementById("courseFilterList");
             courseFilterList.innerHTML = "";
 
-            // courses is a dictionary of lecture tag -> lecture name pairs
-            for (const [tag, name] of Object.entries(courses)) {
+            // courses is a dictionary of lecture name -> true; so extract the names and sort them
+            const courseNames = Object.keys(courses);
+            courseNames.sort();
+
+            for (const courseName of courseNames) {
                 const li = document.createElement("li");
                 const input = document.createElement("input");
                 input.type = "checkbox";
-                input.id = tag;
-                input.checked = !filteredCourses[tag];
+                input.id = courseName;
+                input.checked = !filteredCourses[courseName];
                 input.onchange = () => {
-                    filteredCourses[tag] = !input.checked;
+                    filteredCourses[courseName] = !input.checked;
                     setCopyButton("reset");
                 };
                 li.appendChild(input);
-                li.appendChild(document.createTextNode(name));
+                li.appendChild(document.createTextNode(courseName));
                 courseFilterList.appendChild(li);
             }
 
