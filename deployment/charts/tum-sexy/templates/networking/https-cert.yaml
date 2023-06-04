@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cer-tum-cal-proxy
+  labels:
+    app.kubernetes.io/part-of: tum-cal-proxy
+  namespace: {{ $.Values.namespace }}
+spec:
+  commonName: cal.tum.app
+  secretName: sec-tum-cal-proxy-certs  
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+{{- range $host := $.Values.urls }}
+    - {{ $host }}
+{{ end }}
+

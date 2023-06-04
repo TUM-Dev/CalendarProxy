@@ -1,0 +1,4 @@
+namespace: tum-cal-proxy
+tag: main
+urls: 
+  - cal.tum.app
