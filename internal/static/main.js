@@ -1,7 +1,7 @@
 function generateLink() {
     let input = document.getElementById("tumCalLink")
     input.removeAttribute("class")
-    if (!input.value.match(/https:\/\/campus.tum.de\/tumonlinej\/.{2}\/termin\/ical\?pStud=[0-9,A-Z]*&pToken=[0-9,A-Z]*/i)) {
+    if (!input.value.match(/https:\/\/campus.tum.de\/tumonlinej\/.{2}\/termin\/ical\?(pStud|pPers)=[0-9,A-Z]*&pToken=[0-9,A-Z]*/i)) {
         input.setAttribute("class", "invalid")
         return
     }

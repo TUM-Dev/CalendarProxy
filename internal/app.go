@@ -69,19 +69,32 @@ func (a *App) configRoutes() {
 	})
 }
 
-func (a *App) handleIcal(c *gin.Context) {
+func getUrl(c *gin.Context) string {
 	stud := c.Query("pStud")
+	pers := c.Query("pPers")
 	token := c.Query("pToken")
-	if stud == "" || token == "" {
+	if (stud == "" && pers == "") || token == "" {
+		// Missing parameters: just serve our landing page
 		f, err := static.Open("static/index.html")
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
-			return
+			return ""
 		}
 		io.Copy(c.Writer, f)
+		return ""
+	}
+	if stud == "" {
+		return fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pPers=%s&pToken=%s", pers, token)
+	}
+	return fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token)
+}
+
+func (a *App) handleIcal(c *gin.Context) {
+	url := getUrl(c)
+	if url == "" {
 		return
 	}
-	resp, err := http.Get(fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token))
+	resp, err := http.Get(url)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
