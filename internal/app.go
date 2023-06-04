@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	ics "github.com/arran4/golang-ical"
+	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -43,6 +44,10 @@ func newApp() (*App, error) {
 }
 
 func (a *App) Run() error {
+	sentry.Init(sentry.ClientOptions{
+		Dsn: "https://2fbc80ad1a99406cb72601d6a47240ce@glitch.exgen.io/4",
+	})
+
 	newApp, err := newApp()
 	if err != nil {
 		return err
