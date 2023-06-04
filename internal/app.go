@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	ics "github.com/arran4/golang-ical"
-	"github.com/getsentry/sentry-go"
+	sentry "github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 )
 
