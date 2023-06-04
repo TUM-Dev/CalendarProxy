@@ -10,7 +10,8 @@ import (
 	"strings"
 
 	ics "github.com/arran4/golang-ical"
-	sentry "github.com/getsentry/sentry-go"
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 )
 
@@ -44,20 +45,31 @@ func newApp() (*App, error) {
 }
 
 func (a *App) Run() error {
-	sentry.Init(sentry.ClientOptions{
-		Dsn: "https://2fbc80ad1a99406cb72601d6a47240ce@glitch.exgen.io/4",
-	})
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:           "https://2fbc80ad1a99406cb72601d6a47240ce@glitch.exgen.io/4",
+		EnableTracing: true,
+		// Specify a fixed sample rate: 10% will do for now
+		TracesSampleRate: 0.1,
+	}); err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
 
+	// Create app struct
 	newApp, err := newApp()
 	if err != nil {
 		return err
 	}
 	a = newApp
+
+	// Setup Gin with sentry traces, logger and routes
 	gin.SetMode("release")
 	a.engine = gin.New()
+	a.engine.Use(sentrygin.New(sentrygin.Options{}))
 	a.engine.Use(gin.Logger(), gin.Recovery())
 	a.configRoutes()
-	return a.engine.Run(":80")
+
+	// Start the engines
+	return a.engine.Run(":8080")
 }
 
 func (a *App) configRoutes() {
