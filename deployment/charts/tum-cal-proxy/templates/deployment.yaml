@@ -33,8 +33,11 @@ spec:
               name: https
           securityContext:
             runAsNonRoot: true
+            privileged: false
             runAsUser: 1000
             runAsGroup: 3000
+            capabilities:
+              drop: [All]
             readOnlyRootFilesystem: true
           resources:
             requests:
