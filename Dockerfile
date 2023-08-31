@@ -3,6 +3,7 @@ FROM golang:1.20-alpine3.17 as builder
 # Ca-certificates are required to call HTTPS endpoints.
 RUN apk update && apk add --no-cache ca-certificates tzdata alpine-sdk bash && update-ca-certificates
 
+RUN adduser -D -g '' appuser
 WORKDIR /app
 COPY . .
 
@@ -12,7 +13,8 @@ FROM scratch
 
 COPY --from=builder /proxy /proxy
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc/passwd /etc/passwd
 
-EXPOSE 80
+EXPOSE 4321
 
 CMD ["/proxy"]

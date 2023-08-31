@@ -32,6 +32,9 @@ spec:
             - containerPort: 80
               name: https
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 3000
             readOnlyRootFilesystem: true
           resources:
             requests:
