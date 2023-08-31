@@ -18,7 +18,6 @@ FROM scratch
 
 COPY --from=builder /proxy /proxy
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /etc/passwd /etc/passwd
 
 EXPOSE 4321
 
