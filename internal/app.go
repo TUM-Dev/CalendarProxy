@@ -113,10 +113,16 @@ func getUrl(c *gin.Context) string {
 		// Missing parameters: just serve our landing page
 		f, err := static.Open("static/index.html")
 		if err != nil {
+			sentry.CaptureException(err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 			return ""
 		}
-		io.Copy(c.Writer, f)
+
+		if _, err := io.Copy(c.Writer, f); err != nil {
+			sentry.CaptureException(err)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+			return ""
+		}
 		return ""
 	}
 	if stud == "" {
@@ -148,7 +154,10 @@ func (a *App) handleIcal(c *gin.Context) {
 	response := []byte(cleaned.Serialize())
 	c.Header("Content-Type", "text/calendar")
 	c.Header("Content-Length", fmt.Sprintf("%d", len(response)))
-	c.Writer.Write(response)
+
+	if _, err := c.Writer.Write(response); err != nil {
+		sentry.CaptureException(err)
+	}
 }
 
 func (a *App) getCleanedCalendar(all []byte) (*ics.Calendar, error) {
