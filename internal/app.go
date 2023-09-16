@@ -191,7 +191,7 @@ func (a *App) getCleanedCalendar(all []byte) (*ics.Calendar, error) {
 
 // matches tags like (IN0001) or [MA2012] and everything after.
 // unfortunate also matches wrong brackets like [MA123) but hey…
-var reTag = regexp.MustCompile(" ?[\\[(](MA|IN|WI|WIB)[0-9]+((_|-|,)[a-zA-Z0-9]+)*[\\])].*")
+var reTag = regexp.MustCompile(" ?[\\[(](ED|MW|SOM|CIT|MA|IN|WI|WIB)[0-9]+((_|-|,)[a-zA-Z0-9]+)*[\\])].*")
 
 // Matches location and teacher from language course title
 var reLoc = regexp.MustCompile(" ?(München|Garching|Weihenstephan).+")
