@@ -23,6 +23,39 @@ func getTestData(t *testing.T, name string) (string, *App) {
 	return string(all), app
 }
 
+func TestReplacement(t *testing.T) {
+	r1 := Replacement{"b", "b"}
+	if r1.isLessThan(&r1) {
+		t.Error("Replacement should not be less than itself")
+		return
+	}
+	if r1.isLessThan(&Replacement{key: "longer key first"}) {
+		t.Error("Replacement should sort longer prefix first")
+		return
+	}
+	if !r1.isLessThan(&Replacement{key: ""}) {
+		t.Error("Replacement should sort longer prefix first")
+		return
+	}
+	if r1.isLessThan(&Replacement{key: "a"}) {
+		t.Error("Replacement should sort alphabetically")
+		return
+	}
+	if !r1.isLessThan(&Replacement{key: "c"}) {
+		t.Error("Replacement should sort alphabetically")
+		return
+	}
+	if r1.isLessThan(&Replacement{key: r1.key, value: "a"}) {
+		t.Error("Replacement with equal key should sort alphabetically by value")
+		return
+	}
+	if !r1.isLessThan(&Replacement{key: r1.key, value: "c"}) {
+		t.Error("Replacement with equal key should sort alphabetically by value")
+		return
+	}
+
+}
+
 func TestDeduplication(t *testing.T) {
 	testData, app := getTestData(t, "duplication.ics")
 	calendar, err := app.getCleanedCalendar([]byte(testData))

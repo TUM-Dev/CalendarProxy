@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 
 	ics "github.com/arran4/golang-ical"
@@ -27,18 +28,41 @@ var static embed.FS
 type App struct {
 	engine *gin.Engine
 
-	courseReplacements   map[string]string
+	courseReplacements   []*Replacement
 	buildingReplacements map[string]string
+}
+
+type Replacement struct {
+	key   string
+	value string
+}
+
+// for sorting replacements by length, then alphabetically
+func (r1 *Replacement) isLessThan(r2 *Replacement) bool {
+	if len(r1.key) != len(r2.key) {
+		return len(r1.key) > len(r2.key)
+	}
+	if r1.key != r2.key {
+		return r1.key < r2.key
+	}
+	return r1.value < r2.value
 }
 
 func newApp() (*App, error) {
 	a := App{}
-	err := json.Unmarshal([]byte(coursesJson), &a.courseReplacements)
-	if err != nil {
+
+	// courseReplacements is a map of course names to shortened names.
+	// We sort it by length, then alphabetically to ensure a consistent execution order
+	var rawCourseReplacements map[string]string
+	if err := json.Unmarshal([]byte(coursesJson), &rawCourseReplacements); err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(buildingsJson), &a.buildingReplacements)
-	if err != nil {
+	for key, value := range rawCourseReplacements {
+		a.courseReplacements = append(a.courseReplacements, &Replacement{key, value})
+	}
+	sort.Slice(a.courseReplacements, func(i, j int) bool { return a.courseReplacements[i].isLessThan(a.courseReplacements[j]) })
+	// buildingReplacements is a map of room numbers to building names
+	if err := json.Unmarshal([]byte(buildingsJson), &a.buildingReplacements); err != nil {
 		return nil, err
 	}
 	return &a, nil
@@ -221,8 +245,8 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 	event.SetDescription(description)
 
 	// set title on summary:
-	for k, v := range a.courseReplacements {
-		summary = strings.ReplaceAll(summary, k, v)
+	for _, repl := range a.courseReplacements {
+		summary = strings.ReplaceAll(summary, repl.key, repl.value)
 	}
 	event.SetSummary(summary)
 	switch event.GetProperty(ics.ComponentPropertyStatus).Value {
