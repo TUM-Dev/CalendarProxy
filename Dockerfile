@@ -1,4 +1,4 @@
-FROM golang:1.20-alpine3.17 as builder
+FROM golang:1.21-alpine3.17 as builder
 
 # Ca-certificates are required to call HTTPS endpoints.
 RUN apk update && apk add --no-cache ca-certificates tzdata alpine-sdk bash && update-ca-certificates
@@ -6,7 +6,10 @@ RUN apk update && apk add --no-cache ca-certificates tzdata alpine-sdk bash && u
 WORKDIR /app
 COPY . .
 
-RUN CGO_ENABLED=0 go build -ldflags="-extldflags=-static" -o /proxy cmd/proxy/proxy.go
+# bundle version into binary if specified in build-args, dev otherwise.
+ARG version=dev
+# Compile statically
+RUN CGO_ENABLED=0 go build -ldflags "-w -extldflags '-static' -X internal/app.Version=${version}" -o /proxy cmd/proxy/proxy.go
 
 FROM scratch
 
