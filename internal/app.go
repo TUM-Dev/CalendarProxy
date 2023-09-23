@@ -84,11 +84,10 @@ func (a *App) Run() error {
 	}
 
 	// Create app struct
-	newApp, err := newApp()
+	a, err := newApp()
 	if err != nil {
 		return err
 	}
-	a = newApp
 
 	// Setup Gin with sentry traces, logger and routes
 	gin.SetMode("release")
@@ -98,7 +97,7 @@ func (a *App) Run() error {
 	a.configRoutes()
 
 	// Start the engines
-	return a.engine.Run(":80")
+	return a.engine.Run(":4321")
 }
 
 func (a *App) configRoutes() {
