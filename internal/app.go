@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 
 	ics "github.com/arran4/golang-ical"
@@ -30,18 +31,41 @@ var Version = "dev"
 type App struct {
 	engine *gin.Engine
 
-	courseReplacements   map[string]string
+	courseReplacements   []*Replacement
 	buildingReplacements map[string]string
+}
+
+type Replacement struct {
+	key   string
+	value string
+}
+
+// for sorting replacements by length, then alphabetically
+func (r1 *Replacement) isLessThan(r2 *Replacement) bool {
+	if len(r1.key) != len(r2.key) {
+		return len(r1.key) > len(r2.key)
+	}
+	if r1.key != r2.key {
+		return r1.key < r2.key
+	}
+	return r1.value < r2.value
 }
 
 func newApp() (*App, error) {
 	a := App{}
-	err := json.Unmarshal([]byte(coursesJson), &a.courseReplacements)
-	if err != nil {
+
+	// courseReplacements is a map of course names to shortened names.
+	// We sort it by length, then alphabetically to ensure a consistent execution order
+	var rawCourseReplacements map[string]string
+	if err := json.Unmarshal([]byte(coursesJson), &rawCourseReplacements); err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(buildingsJson), &a.buildingReplacements)
-	if err != nil {
+	for key, value := range rawCourseReplacements {
+		a.courseReplacements = append(a.courseReplacements, &Replacement{key, value})
+	}
+	sort.Slice(a.courseReplacements, func(i, j int) bool { return a.courseReplacements[i].isLessThan(a.courseReplacements[j]) })
+	// buildingReplacements is a map of room numbers to building names
+	if err := json.Unmarshal([]byte(buildingsJson), &a.buildingReplacements); err != nil {
 		return nil, err
 	}
 	return &a, nil
@@ -94,10 +118,16 @@ func getUrl(c *gin.Context) string {
 		// Missing parameters: just serve our landing page
 		f, err := static.Open("static/index.html")
 		if err != nil {
+			sentry.CaptureException(err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 			return ""
 		}
-		io.Copy(c.Writer, f)
+
+		if _, err := io.Copy(c.Writer, f); err != nil {
+			sentry.CaptureException(err)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+			return ""
+		}
 		return ""
 	}
 	if stud == "" {
@@ -129,7 +159,10 @@ func (a *App) handleIcal(c *gin.Context) {
 	response := []byte(cleaned.Serialize())
 	c.Header("Content-Type", "text/calendar")
 	c.Header("Content-Length", fmt.Sprintf("%d", len(response)))
-	c.Writer.Write(response)
+
+	if _, err := c.Writer.Write(response); err != nil {
+		sentry.CaptureException(err)
+	}
 }
 
 func (a *App) getCleanedCalendar(all []byte) (*ics.Calendar, error) {
@@ -163,7 +196,7 @@ func (a *App) getCleanedCalendar(all []byte) (*ics.Calendar, error) {
 
 // matches tags like (IN0001) or [MA2012] and everything after.
 // unfortunate also matches wrong brackets like [MA123) but hey…
-var reTag = regexp.MustCompile(" ?[\\[(](MA|IN|WI|WIB)[0-9]+((_|-|,)[a-zA-Z0-9]+)*[\\])].*")
+var reTag = regexp.MustCompile(" ?[\\[(](ED|MW|SOM|CIT|MA|IN|WI|WIB)[0-9]+((_|-|,)[a-zA-Z0-9]+)*[\\])].*")
 
 // Matches location and teacher from language course title
 var reLoc = regexp.MustCompile(" ?(München|Garching|Weihenstephan).+")
@@ -226,8 +259,8 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 	event.SetDescription(description)
 
 	// set title on summary:
-	for k, v := range a.courseReplacements {
-		summary = strings.ReplaceAll(summary, k, v)
+	for _, repl := range a.courseReplacements {
+		summary = strings.ReplaceAll(summary, repl.key, repl.value)
 	}
 	event.SetSummary(summary)
 	switch event.GetProperty(ics.ComponentPropertyStatus).Value {
