@@ -1,6 +1,7 @@
 {
   "Technology and Innovation Management": "TIM",
   "Tutorübungen": "TÜ",
+  "Überfachliche Grundlagen": "ÜG",
   "Grundlagen": "G",
   "Introduction": "I",
   "Datenbanken": "DB",
@@ -21,6 +22,9 @@
   "Software Engineering für betriebliche Anwendungen - Masterkurs: Web Application Engineering": "SEBA",
   "Betriebswirtschaftslehre": "BWL",
   "Volkswirtschaftslehre": "VWL",
+  "Wirtschaftsprivatrecht 1": "WPR1",
+  "Wirtschaftsprivatrecht 2": "WPR2",
+  "Wirtschaftsprivatrecht": "WPR",
   "Funktionale Programmierung und Verifikation": "FPV",
   "Buchführung und Rechnungswesen": "BF & RW",
   "Planen und Entscheiden in betrieblichen Informationssystemen - Wirtschaftsinformatik 4": "PLEBIS",
@@ -33,6 +37,7 @@
   "Projektorganisation und -management in der Softwaretechnik": "POM",
   "Empirical Research Methods": "ERM",
   "Informationsmanagement": "IM",
+  "Business Process Technologies and Management": "BPTM",
   "Bachelor-Seminar: Digitale Hochschule: Aktuelle Trends und Herausforderungen": "Digitale Hochschule",
   "Betriebssysteme und Systemsoftware": "BS",
   "Einführung in die Informatik 2": "Einführung in die Informatik 2",
@@ -92,6 +97,7 @@
   "Modellierung von Unsicherheiten und Daten im Maschinenwesen": "MUD",
   "Mathematische Tools": "MTT",
   "Hausaufgabentutorium": "HA TÜ",
+  "Kurs zum/zur Fachsanitäter*in": "Fachsani",
   "  ": " ",
   "&amp;": "&"
 }
