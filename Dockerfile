@@ -14,7 +14,10 @@ RUN go mod download
 COPY cmd cmd
 COPY internal internal
 
-RUN CGO_ENABLED=0 go build -ldflags="-extldflags=-static" -o /proxy cmd/proxy/proxy.go
+# bundle version into binary if specified in build-args, dev otherwise.
+ARG version=dev
+# Compile statically
+RUN CGO_ENABLED=0 go build -ldflags "-w -extldflags '-static' -X internal/app.Version=${version}" -o /proxy cmd/proxy/proxy.go
 
 FROM scratch
 

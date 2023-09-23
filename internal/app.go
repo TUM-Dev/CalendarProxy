@@ -25,6 +25,9 @@ var buildingsJson string
 //go:embed static
 var static embed.FS
 
+// Version is injected at build time by the compiler with the correct git-commit-sha or "dev" in development
+var Version = "dev"
+
 type App struct {
 	engine *gin.Engine
 
@@ -70,8 +73,10 @@ func newApp() (*App, error) {
 
 func (a *App) Run() error {
 	if err := sentry.Init(sentry.ClientOptions{
-		Dsn:           "https://2fbc80ad1a99406cb72601d6a47240ce@glitch.exgen.io/4",
-		EnableTracing: true,
+		Dsn:              "https://2fbc80ad1a99406cb72601d6a47240ce@glitch.exgen.io/4",
+		Release:          Version,
+		AttachStacktrace: true,
+		EnableTracing:    true,
 		// Specify a fixed sample rate: 10% will do for now
 		TracesSampleRate: 0.1,
 	}); err != nil {
