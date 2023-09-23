@@ -6,11 +6,13 @@ RUN apk update && apk add --no-cache ca-certificates tzdata alpine-sdk bash && u
 # Create appuser
 RUN adduser -D -g '' appuser
 WORKDIR /app
+# Copy go mod and sum files and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
 
 # compile the app
 COPY cmd cmd
 COPY internal internal
-COPY go.* .
 
 RUN CGO_ENABLED=0 go build -ldflags="-extldflags=-static" -o /proxy cmd/proxy/proxy.go
 
