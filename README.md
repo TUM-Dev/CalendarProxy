@@ -3,7 +3,7 @@
 
 Proxy for the TUM iCal export to remove clutter from it and optimize the output
 
-You can find more information on the about page: https://cal.tum.sexy/
+You can find more information on the about page: https://cal.tum.app/
 
 ## Development
 To run locally:
