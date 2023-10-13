@@ -3,7 +3,7 @@
 This is a proxy service that simplifies and enhances the iCal export from TUM Online. It allows you to:
 
 - Shorten long lesson names, such as 'Grundlagen Betriebssysteme und Systemsoftware' → 'GBS'
-- Add locations that are recognized by Google Maps / Google Now
+- Add locations that are recognized by Google / Apple Maps
 - Filter out unwanted events, such as cancelled, duplicate or optional ones
 
 You can use the proxy service by visiting <https://cal.tum.app/> and following the instructions there.
