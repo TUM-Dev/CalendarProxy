@@ -1,5 +1,7 @@
 # TUM Calendar Proxy
 
+![Alt text](image.png)
+
 This is a proxy service that simplifies and enhances the iCal export from TUM Online. It allows you to:
 
 - Shorten long lesson names, such as 'Grundlagen Betriebssysteme und Systemsoftware' → 'GBS'
