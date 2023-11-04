@@ -26,4 +26,5 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 EXPOSE 6001
 
+HEALTHCHECK  --interval=5s --start-period=5s --timeout=3s CMD ["/proxy", "healthcheck"]
 CMD ["/proxy"]

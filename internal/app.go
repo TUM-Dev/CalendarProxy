@@ -93,7 +93,8 @@ func (a *App) Run() error {
 	gin.SetMode("release")
 	a.engine = gin.New()
 	a.engine.Use(sentrygin.New(sentrygin.Options{}))
-	a.engine.Use(gin.Logger(), gin.Recovery())
+	a.engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/health"}}))
+	a.engine.Use(gin.Recovery())
 	a.configRoutes()
 
 	// Start the engines
@@ -102,8 +103,8 @@ func (a *App) Run() error {
 
 func (a *App) configRoutes() {
 	a.engine.Any("/", a.handleIcal)
-	f := http.FS(static)
-	a.engine.StaticFS("/files/", f)
+	a.engine.GET("/health", func(c *gin.Context) { c.String(http.StatusOK, "healthy") })
+	a.engine.StaticFS("/files/", http.FS(static))
 	a.engine.NoMethod(func(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotImplemented)
 	})
