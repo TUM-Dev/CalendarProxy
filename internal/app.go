@@ -97,7 +97,7 @@ func (a *App) Run() error {
 	a.configRoutes()
 
 	// Start the engines
-	return a.engine.Run(":4321")
+	return a.engine.Run(":6001")
 }
 
 func (a *App) configRoutes() {

@@ -13,5 +13,5 @@ spec:
     app.kubernetes.io/name: server
   ports:
     - name: server
-      port: 4321
-      targetPort: 4321
+      port: 6001
+      targetPort: 6001

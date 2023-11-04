@@ -13,7 +13,7 @@ spec:
       match: Host(`{{ join "`) || Host(`" $.Values.urls }}`)
       services:
         - name: tum-cal-proxy-svc
-          port: 4321
+          port: 6001
   tls:
     secretName: sec-tum-cal-proxy-certs
 ---
