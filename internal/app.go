@@ -152,7 +152,7 @@ func (a *App) handleIcal(c *gin.Context) {
 		return
 	}
 	filters := c.QueryArray("filter")
-	cleaned, err := a.getCleanedCalendar(calData, filters)
+	cleaned, err := a.getCleanedCalendar(all, filters)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
