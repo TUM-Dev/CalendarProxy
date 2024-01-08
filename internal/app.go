@@ -168,12 +168,22 @@ func (a *App) handleIcal(c *gin.Context) {
 }
 
 func (a *App) handleGetCourses(c *gin.Context) {
-	calData := readTumCalendarFromParams(c)
-	if calData == nil {
-		return // JSON response is already sent by readTumCalendarFromParams
+	url := getUrl(c)
+	if url == "" {
+		return
+	}
+	resp, err := http.Get(url)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
+	}
+	all, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
 	}
 
-	cal, err := ics.ParseCalendar(strings.NewReader(string(calData)))
+	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
@@ -194,34 +204,6 @@ func (a *App) handleGetCourses(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, courses)
-}
-
-func readTumCalendarFromParams(c *gin.Context) []byte {
-	stud := c.Query("pStud")
-	token := c.Query("pToken")
-
-	if stud == "" || token == "" {
-		f, err := static.Open("static/index.html")
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
-			return nil
-		}
-		io.Copy(c.Writer, f)
-		return nil
-	}
-
-	resp, err := http.Get(fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token))
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
-		return nil
-	}
-	all, err := io.ReadAll(resp.Body)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
-		return nil
-	}
-
-	return all
 }
 
 func stringEqualsOneOf(target string, listOfStrings []string) bool {
