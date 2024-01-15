@@ -119,8 +119,8 @@ func TestCourseFiltering(t *testing.T) {
 	}
 
 	// now filter out one course
-	filteredTag := "IN0004"
-	filteredCalendar, err := app.getCleanedCalendar([]byte(testData), []string{filteredTag})
+    filter := "Einführung in die Rechnerarchitektur (IN0004) VO\\, Standardgruppe"
+	filteredCalendar, err := app.getCleanedCalendar([]byte(testData), []string{filter})
 	if err != nil {
 		t.Error(err)
 		return
@@ -132,8 +132,8 @@ func TestCourseFiltering(t *testing.T) {
 
 	// make sure the summary does not contain the filtered course's name
 	summary := filteredCalendar.Components[0].(*ics.VEvent).GetProperty(ics.ComponentPropertySummary).Value
-	if strings.Contains(summary, filteredTag) {
-		t.Errorf("Summary should not contain %s but is %s", filteredTag, summary)
+	if strings.Contains(summary, filter) {
+		t.Errorf("Summary should not contain %s but is %s", filter, summary)
 		return
 	}
 }
