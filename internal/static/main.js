@@ -1,4 +1,4 @@
-const filteredCourses = {};
+const adjustedCourses = {};
 
 function getAndCheckCalLink() {
     let input = document.getElementById("tumCalLink")
@@ -28,7 +28,7 @@ function generateLink() {
 
     // add course filters
     const queryParams = new URLSearchParams(adjustedLink.search);
-    for (const [courseName, shouldFilter] of Object.entries(filteredCourses)) {
+    for (const [courseName, shouldFilter] of Object.entries(adjustedCourses)) {
         if (shouldFilter) {
             queryParams.append("filter", courseName);
         }
@@ -59,36 +59,45 @@ function reloadCourses() {
             throw new Error(`Failed to fetch courses: ${response.text()}`);
         })
         .then(courses => {
-            // add checkboxes for each course in courseFilterList
-            const courseFilterList = document.getElementById("courseFilterList");
-            courseFilterList.innerHTML = "";
+            // add checkboxes for each course in courseAdjustList
+            const courseAdjustList = document.getElementById("courseAdjustList");
+            courseAdjustList.innerHTML = "";
 
-            // courses is a dictionary of lecture name -> true; so extract the names and sort them
-            const courseNames = Object.keys(courses);
-            courseNames.sort();
-
-            for (const courseName of courseNames) {
+            for (const [key, course] of Object.entries(courses)) {
                 const li = document.createElement("li");
                 const input = document.createElement("input");
+                const recurrences = document.createElement("ul");
                 input.type = "checkbox";
-                input.id = courseName;
-                input.checked = !filteredCourses[courseName];
+                input.id = course.summary;
+                input.checked = !adjustedCourses[key];
                 input.onchange = () => {
-                    filteredCourses[courseName] = !input.checked;
+                    adjustedCourses[key].hide = !input.checked;
                     setCopyButton("reset");
                 };
+                
+                for (const recurrence of Object.values(course.recurrences)) {
+                  const recLi = document.createElement("li");
+                  recLi.id = recurrence.recurringId;
+
+                  const startDate = new Date(recurrence.dtStart);
+                  const endDate = new Date(recurrence.dtEnd);
+                  const dayOfWeek = new Intl.DateTimeFormat("de-DE", {weekday: "long"}).format(startDate);
+                  recLi.appendChild(document.createTextNode(`${dayOfWeek}: ${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()}`));
+                  recurrences.appendChild(recLi);
+                }
                 li.appendChild(input);
-                li.appendChild(document.createTextNode(courseName));
-                courseFilterList.appendChild(li);
+                li.appendChild(document.createTextNode(course.summary));
+                li.appendChild(recurrences);
+                courseAdjustList.appendChild(li);
             }
 
             // hide or un-hide course filter section depending on whether
             // courses were found
-            document.getElementById("courseFilterDiv").hidden = Object.keys(courses).length === 0;
+            document.getElementById("courseAdjustDiv").hidden = Object.keys(courses).length === 0;
         })
         .catch(err => {
             console.log(err);
-            document.getElementById("courseFilterDiv").hidden = true;
+            document.getElementById("courseAdjustDiv").hidden = true;
         });
 }
 

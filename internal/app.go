@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	ics "github.com/arran4/golang-ical"
 	"github.com/getsentry/sentry-go"
@@ -38,6 +39,20 @@ type App struct {
 type Replacement struct {
 	key   string
 	value string
+}
+
+type Event struct {
+    RecurringId         string      `json:"recurringId"`
+    DtStart             time.Time   `json:"dtStart"`
+    DtEnd               time.Time   `json:"dtEnd"`
+    StartOffsetMinutes  int         `json:"startOffsetMinutes"`
+    EndOffsetMinutes    int         `json:"endOffsetMinutes"`
+}
+
+type Course struct {
+    Summary     string              `json:"summary"`
+    Hide        bool                `json:"hide"`
+    Recurrences map[string]Event    `json:"recurrences"`
 }
 
 // for sorting replacements by length, then alphabetically
@@ -190,13 +205,40 @@ func (a *App) handleGetCourses(c *gin.Context) {
 	}
 
 	// detect all courses, de-duplicate them by their summary (lecture name)
-	courses := make(map[string]bool)
+	courses := make(map[string]Course)
 	for _, component := range cal.Components {
 		switch component.(type) {
 		case *ics.VEvent:
-			event := component.(*ics.VEvent)
-			eventSummary := event.GetProperty(ics.ComponentPropertySummary).Value
-			courses[eventSummary] = true
+			vEvent := component.(*ics.VEvent)
+            event := Event{
+              RecurringId:  vEvent.GetProperty("X-CO-RECURRINGID").Value,
+              StartOffsetMinutes: 0, //TODO: load from url
+              EndOffsetMinutes: 0, //TODO: load form url
+            }
+
+            if event.DtStart, err = vEvent.GetStartAt(); err != nil {
+              continue
+            }
+            if event.DtEnd, err = vEvent.GetEndAt(); err != nil {
+              continue
+            }
+
+			eventSummary := vEvent.GetProperty(ics.ComponentPropertySummary).Value
+            course, exists := courses[eventSummary]
+
+            if exists == false {
+              course = Course{
+                Summary: eventSummary,
+                Hide: false,  //TODO: load form url
+                Recurrences: map[string]Event{},
+              }
+            } 
+
+            // only add recurring events
+            if event.RecurringId != "" {
+              course.Recurrences[event.RecurringId] = event
+            }
+            courses[eventSummary] = course
 
 		default:
 			continue
