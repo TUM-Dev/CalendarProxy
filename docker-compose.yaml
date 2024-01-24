@@ -1,0 +1,13 @@
+services:
+  cal-proxy:
+    image: ghcr.io/tum-dev/calendarproxy/server:latest
+    build: .
+    ports:
+      - 6001:6001
+    # security
+    read_only: true
+    restart: always
+    user: "1000:3000"
+    privileged: false
+    cap_drop:
+      - ALL

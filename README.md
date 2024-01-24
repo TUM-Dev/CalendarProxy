@@ -21,10 +21,9 @@ To run the service locally, follow these steps:
 - Clone this repository: `git clone https://github.com/tum-calendar-proxy/tum-calendar-proxy.git`
 - Navigate to the project directory: `cd tum-calendar-proxy`
 - Run the proxy server: `go run cmd/proxy/proxy.go`
-- The service will be available at <http://localhost:4321>
+- The service will be available at <http://localhost:6001>
 
 To build a production image using Docker, follow these steps:
 
-- Build the image: `docker build -t tumcalproxy .`
-- Run the container: `docker run -p 4321:4321 tumcalproxy`
-- The service will be available at <http://localhost:4321>
+- run `docker compose up --build`
+- The service will be available at <http://localhost:6001>
