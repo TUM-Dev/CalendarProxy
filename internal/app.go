@@ -166,8 +166,8 @@ func (a *App) handleIcal(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
-	filters := c.QueryArray("filter")
-	cleaned, err := a.getCleanedCalendar(all, filters)
+	hide := c.QueryArray("hide")
+	cleaned, err := a.getCleanedCalendar(all, hide)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -257,7 +257,7 @@ func stringEqualsOneOf(target string, listOfStrings []string) bool {
 	return false
 }
 
-func (a *App) getCleanedCalendar(all []byte, filters []string) (*ics.Calendar, error) {
+func (a *App) getCleanedCalendar(all []byte, hide []string) (*ics.Calendar, error) {
 	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
 	if err != nil {
 		return nil, err
@@ -272,10 +272,10 @@ func (a *App) getCleanedCalendar(all []byte, filters []string) (*ics.Calendar, e
 		case *ics.VEvent:
 			event := component.(*ics.VEvent)
 
-			// check if the summary contains any of the filtered keys, and if yes, skip it
+			// check if the summary contains any of the hidden keys, and if yes, skip it
 			eventSummary := event.GetProperty(ics.ComponentPropertySummary).Value
-			shouldFilterEvent := stringEqualsOneOf(eventSummary, filters)
-			if shouldFilterEvent {
+			shouldHideEvent := stringEqualsOneOf(eventSummary, hide)
+			if shouldHideEvent {
 				continue
 			}
 

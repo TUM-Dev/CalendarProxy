@@ -26,11 +26,11 @@ function generateLink() {
 
     const adjustedLink = new URL(calLink.replace(/https:\/\/campus.tum.de\/tumonlinej\/.{2}\/termin\/ical/i, "https://cal.tum.app").replace("\t", ""));
 
-    // add course filters
+    // add course hide option
     const queryParams = new URLSearchParams(adjustedLink.search);
-    for (const [courseName, shouldFilter] of Object.entries(adjustedCourses)) {
-        if (shouldFilter) {
-            queryParams.append("filter", courseName);
+    for (const [courseName, shouldHide] of Object.entries(adjustedCourses)) {
+        if (shouldHide) {
+            queryParams.append("hide", courseName);
         }
     }
 
@@ -71,7 +71,10 @@ function reloadCourses() {
                 input.id = course.summary;
                 input.checked = !adjustedCourses[key];
                 input.onchange = () => {
-                    adjustedCourses[key].hide = !input.checked;
+
+                    const adjustedCourse = adjustedCourses[key] || {};
+                    adjustedCourse.hide = !input.checked;
+                    adjustedCourses[key] = adjustedCourse;
                     setCopyButton("reset");
                 };
                 
@@ -82,7 +85,37 @@ function reloadCourses() {
                   const startDate = new Date(recurrence.dtStart);
                   const endDate = new Date(recurrence.dtEnd);
                   const dayOfWeek = new Intl.DateTimeFormat("de-DE", {weekday: "long"}).format(startDate);
+
+                  const startOffsetInput = document.createElement("input");
+                  startOffsetInput.type = "number";
+                  startOffsetInput.classList.add("offset");
+                  startOffsetInput.inputmode = "numeric";
+                  startOffsetInput.pattern = "\d*";
+                  startOffsetInput.value = recurrence.startOffsetMinutes || 0;
+                  startOffsetInput.onchange = () => {
+                      const adjustedCourse = adjustedCourses[key] || {};
+                      adjustedCourse.startOffsetMinutes = startOffsetInput.value;
+                      adjustedCourses[key] = adjustedCourse;
+                      setCopyButton("reset");
+                  };
+
+                  const endOffsetInput = document.createElement("input");
+                  endOffsetInput.type = "number";
+                  endOffsetInput.classList.add("offset");
+                  endOffsetInput.inputmode = "numeric";
+                  endOffsetInput.pattern = "\d*";
+                  endOffsetInput.value = recurrence.endOffsetMinutes || 0;
+                  endOffsetInput.onchange = () => {
+                      const adjustedCourse = adjustedCourses[key] || {};
+                      adjustedCourse.startOffsetMinutes = endOffsetInput.value;
+                      adjustedCourses[key] = adjustedCourse;
+                      setCopyButton("reset");
+                  };
+
+
+                  recLi.appendChild(startOffsetInput);
                   recLi.appendChild(document.createTextNode(`${dayOfWeek}: ${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()}`));
+                  recLi.appendChild(endOffsetInput);
                   recurrences.appendChild(recLi);
                 }
                 li.appendChild(input);
@@ -91,7 +124,7 @@ function reloadCourses() {
                 courseAdjustList.appendChild(li);
             }
 
-            // hide or un-hide course filter section depending on whether
+            // enable/disable course adjustment section depending on whether
             // courses were found
             document.getElementById("courseAdjustDiv").hidden = Object.keys(courses).length === 0;
         })
