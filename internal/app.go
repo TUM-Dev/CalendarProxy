@@ -3,11 +3,13 @@ package internal
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -151,6 +153,38 @@ func getUrl(c *gin.Context) string {
 	return fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token)
 }
 
+func parseOffsetsQuery(values []string) (map[int]int, error) {
+    offsets := make(map[int]int)
+
+    for _, value := range values {
+        parts := strings.Split(value, "+")
+        positive := true
+        if len(parts) != 2 {
+          parts = strings.Split(value, "-")
+          positive = false
+          if len(parts) != 2 {
+            return offsets, errors.New("OffsetsQuery was malformed")
+          }
+        }
+
+        id, err := strconv.Atoi(parts[0])
+        if err != nil {
+          return offsets, err
+        }
+        offset, err := strconv.Atoi(parts[0])
+        if err != nil {
+          return offsets, err
+        }
+
+        if positive == false { 
+          offset = -1 * offset
+        }
+
+        offsets[id] = offset
+    }
+    return offsets, nil
+}
+
 func (a *App) handleIcal(c *gin.Context) {
 	url := getUrl(c)
 	if url == "" {
@@ -167,7 +201,18 @@ func (a *App) handleIcal(c *gin.Context) {
 		return
 	}
 	hide := c.QueryArray("hide")
-	cleaned, err := a.getCleanedCalendar(all, hide)
+	startOffsets, err := parseOffsetsQuery(c.QueryArray("startOffset"))
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	endOffsets, err := parseOffsetsQuery(c.QueryArray("endOffset"))
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	cleaned, err := a.getCleanedCalendar(all, hide, startOffsets, endOffsets)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -257,7 +302,12 @@ func stringEqualsOneOf(target string, listOfStrings []string) bool {
 	return false
 }
 
-func (a *App) getCleanedCalendar(all []byte, hide []string) (*ics.Calendar, error) {
+func (a *App) getCleanedCalendar(
+  all []byte,
+  hide []string,
+  startOffsets map[int]int,
+  endOffsets map[int]int,
+) (*ics.Calendar, error) {
 	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
 	if err != nil {
 		return nil, err
@@ -284,6 +334,10 @@ func (a *App) getCleanedCalendar(all []byte, hide []string) (*ics.Calendar, erro
 				continue
 			}
 			hasLecture[dedupKey] = true // mark event as seen
+
+            if recurringId, err := strconv.Atoi(event.GetProperty("X-CO-RECURRINGID").Value); err == nil {
+                a.adjustEventTimes(event, startOffsets[recurringId], endOffsets[recurringId])
+            }
 			a.cleanEvent(event)
 			newComponents = append(newComponents, event)
 		default: // keep everything that is not an event (metadata etc.)
@@ -318,6 +372,21 @@ var unneeded = []string{
 }
 
 var reRoom = regexp.MustCompile("^(.*?),.*(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\\d)\\.\\d+")
+
+func (a *App) adjustEventTimes(event *ics.VEvent, startOffset int, endOffset int) {
+    if startOffset != 0 {
+        if start, err := event.GetStartAt(); err != nil {
+          start = start.Add(time.Minute * time.Duration(startOffset))
+          event.SetStartAt(start)
+        }
+    }
+    if endOffset != 0 {
+        if end, err := event.GetEndAt(); err != nil {
+          end = end.Add(time.Minute * time.Duration(startOffset))
+          event.SetEndAt(end)
+        }
+    }
+}
 
 func (a *App) cleanEvent(event *ics.VEvent) {
 	summary := ""

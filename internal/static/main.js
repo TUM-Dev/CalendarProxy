@@ -35,11 +35,13 @@ function generateLink() {
     }
 
     for (const [id, offset] of startOffsetRecurrences.entries()) {
-          queryParams.append("startOffset" + id, offset);
+          if (offset == 0) continue;
+          queryParams.append("startOffset", id.toString() + (offset > 0 ? "+" : " ") + offset.toString());
     }
 
     for (const [id, offset] of endOffsetRecurrences.entries()) {
-          queryParams.append("endOffset" + id, offset);
+          if (offset == 0) continue;
+          queryParams.append("endOffset", id.toString() + (offset > 0 ? "+" : "") + offset.toString());
     }
 
     adjustedLink.search = queryParams;
