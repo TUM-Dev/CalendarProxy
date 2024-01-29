@@ -212,8 +212,8 @@ func (a *App) handleGetCourses(c *gin.Context) {
 			vEvent := component.(*ics.VEvent)
             event := Event{
               RecurringId:  vEvent.GetProperty("X-CO-RECURRINGID").Value,
-              StartOffsetMinutes: 0, //TODO: load from url
-              EndOffsetMinutes: 0, //TODO: load form url
+              StartOffsetMinutes: 0,
+              EndOffsetMinutes: 0,
             }
 
             if event.DtStart, err = vEvent.GetStartAt(); err != nil {
@@ -229,7 +229,7 @@ func (a *App) handleGetCourses(c *gin.Context) {
             if exists == false {
               course = Course{
                 Summary: eventSummary,
-                Hide: false,  //TODO: load form url
+                Hide: false,
                 Recurrences: map[string]Event{},
               }
             } 
