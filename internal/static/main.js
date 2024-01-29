@@ -1,4 +1,6 @@
-const adjustedCourses = {};
+const hiddenCourses = new Set();
+const startOffsetRecurrences = new Map();
+const endOffsetRecurrences = new Map();
 
 function getAndCheckCalLink() {
     let input = document.getElementById("tumCalLink")
@@ -28,10 +30,16 @@ function generateLink() {
 
     // add course hide option
     const queryParams = new URLSearchParams(adjustedLink.search);
-    for (const [courseName, shouldHide] of Object.entries(adjustedCourses)) {
-        if (shouldHide) {
-            queryParams.append("hide", courseName);
-        }
+    for (const courseName of hiddenCourses) {
+          queryParams.append("hide", courseName);
+    }
+
+    for (const [id, offset] of startOffsetRecurrences.entries()) {
+          queryParams.append("startOffset" + id, offset);
+    }
+
+    for (const [id, offset] of endOffsetRecurrences.entries()) {
+          queryParams.append("endOffset" + id, offset);
     }
 
     adjustedLink.search = queryParams;
@@ -69,12 +77,13 @@ function reloadCourses() {
                 const recurrences = document.createElement("ul");
                 input.type = "checkbox";
                 input.id = course.summary;
-                input.checked = !adjustedCourses[key];
+                input.checked = !hiddenCourses.has(key);
                 input.onchange = () => {
-
-                    const adjustedCourse = adjustedCourses[key] || {};
-                    adjustedCourse.hide = !input.checked;
-                    adjustedCourses[key] = adjustedCourse;
+                    if (input.checked) {
+                      hiddenCourses.delete(key);
+                    } else {
+                      hiddenCourses.add(key);
+                    }
                     setCopyButton("reset");
                 };
                 
@@ -93,9 +102,7 @@ function reloadCourses() {
                   startOffsetInput.pattern = "\d*";
                   startOffsetInput.value = recurrence.startOffsetMinutes || 0;
                   startOffsetInput.onchange = () => {
-                      const adjustedCourse = adjustedCourses[key] || {};
-                      adjustedCourse.startOffsetMinutes = startOffsetInput.value;
-                      adjustedCourses[key] = adjustedCourse;
+                      startOffsetRecurrences.set(recurrence.recurringId, Number(startOffsetInput.value));
                       setCopyButton("reset");
                   };
 
@@ -106,9 +113,7 @@ function reloadCourses() {
                   endOffsetInput.pattern = "\d*";
                   endOffsetInput.value = recurrence.endOffsetMinutes || 0;
                   endOffsetInput.onchange = () => {
-                      const adjustedCourse = adjustedCourses[key] || {};
-                      adjustedCourse.startOffsetMinutes = endOffsetInput.value;
-                      adjustedCourses[key] = adjustedCourse;
+                      endOffsetRecurrences.set(recurrence.recurringId, Number(endOffsetInput.value));
                       setCopyButton("reset");
                   };
 
