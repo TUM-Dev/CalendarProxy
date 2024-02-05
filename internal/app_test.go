@@ -137,3 +137,66 @@ func TestCourseFiltering(t *testing.T) {
 		return
 	}
 }
+
+func TestCourseTimeAdjustment(t *testing.T) {
+	testData, app := getTestData(t, "timeadjustment.ics")
+
+    startOffsets := map[int]int {
+      583745: 15,
+    }
+
+    endOffsets := map[int]int {
+      583745: 0,
+      583744: -14,
+    }
+
+	adjCal, err := app.getCleanedCalendar([]byte(testData), []string{}, startOffsets, endOffsets)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if len(adjCal.Components) != 4 {
+		t.Errorf("Calendar should have 4 entries before time adjustment but was %d", len(adjCal.Components))
+		return
+	}
+
+    // first entry (recurring id 583745): only start offset expected (+15)
+    if start := adjCal.Components[0].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtstart)).Value; start != "20240109T171500Z" {
+		t.Errorf("start (+15) should have been 20240109T171500Z but was %s", start)
+		return
+	}
+    if end := adjCal.Components[0].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtend)).Value; end != "20240109T190000Z" {
+		t.Errorf("end (+0) should have been 20240109T190000Z but was %s", end)
+		return
+	}
+
+    // second entry (recurring id 583744): only end offset expected (-14)
+    if start := adjCal.Components[1].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtstart)).Value; start != "20231113T170000Z" {
+		t.Errorf("start (+/- n.a.) should have been 20231113T170000Z but was %s", start)
+		return
+	}
+    if end := adjCal.Components[1].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtend)).Value; end != "20231113T184600Z" {
+		t.Errorf("end (-14) should have been 20231113T184600Z but was %s", end)
+		return
+	}
+
+    // third entry (no recurring id): expect no adjustments
+    if start := adjCal.Components[2].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtstart)).Value; start != "20231023T160000Z" {
+		t.Errorf("start (+/- n.a.) should have been 20231023T160000Z but was %s", start)
+		return
+	}
+    if end := adjCal.Components[2].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtend)).Value; end != "20231023T180000Z" {
+		t.Errorf("end (+/- n.a.) should have been 20231023T180000Z but was %s", end)
+		return
+	}
+
+    // fourth entry (recurring id 583745): expect only start offset expected (+15)
+    if start := adjCal.Components[3].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtstart)).Value; start != "20240206T171500Z" {
+		t.Errorf("start (+/- n.a.) should have been 20240206T171500Z but was %s", start)
+		return
+	}
+    if end := adjCal.Components[3].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtend)).Value; end != "20240206T190000Z" {
+		t.Errorf("end (+/- n.a.) should have been 20240206T190000Z but was %s", end)
+		return
+	}
+}
