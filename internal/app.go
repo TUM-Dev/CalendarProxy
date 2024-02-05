@@ -375,13 +375,13 @@ var reRoom = regexp.MustCompile("^(.*?),.*(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\\
 
 func (a *App) adjustEventTimes(event *ics.VEvent, startOffset int, endOffset int) {
     if startOffset != 0 {
-        if start, err := event.GetStartAt(); err != nil {
+        if start, err := event.GetStartAt(); err == nil {
           start = start.Add(time.Minute * time.Duration(startOffset))
           event.SetStartAt(start)
         }
     }
     if endOffset != 0 {
-        if end, err := event.GetEndAt(); err != nil {
+        if end, err := event.GetEndAt(); err == nil {
           end = end.Add(time.Minute * time.Duration(startOffset))
           event.SetEndAt(end)
         }
