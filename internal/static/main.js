@@ -120,8 +120,11 @@ function reloadCourses() {
                   };
 
 
+                  recLi.appendChild(document.createTextNode(`id ${recurrence.recurringId}: `));
+                  recLi.appendChild(document.createTextNode(`start (+/-)`));
                   recLi.appendChild(startOffsetInput);
-                  recLi.appendChild(document.createTextNode(`${dayOfWeek}: ${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()}`));
+                  recLi.appendChild(document.createTextNode(` ${dayOfWeek}: ${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()} `));
+                  recLi.appendChild(document.createTextNode(`end (+/-)`));
                   recLi.appendChild(endOffsetInput);
                   recurrences.appendChild(recLi);
                 }
