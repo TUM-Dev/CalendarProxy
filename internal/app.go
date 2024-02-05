@@ -378,12 +378,19 @@ func (a *App) adjustEventTimes(event *ics.VEvent, startOffset int, endOffset int
         if start, err := event.GetStartAt(); err == nil {
           start = start.Add(time.Minute * time.Duration(startOffset))
           event.SetStartAt(start)
+
+          if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
+            event.SetDescription(d.Value + fmt.Sprintf("; start offset: %d", startOffset))
+          }
         }
     }
     if endOffset != 0 {
         if end, err := event.GetEndAt(); err == nil {
-          end = end.Add(time.Minute * time.Duration(startOffset))
+          end = end.Add(time.Minute * time.Duration(endOffset))
           event.SetEndAt(end)
+          if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
+            event.SetDescription(d.Value + fmt.Sprintf("; end offset: %dm", endOffset))
+          }
         }
     }
 }
