@@ -171,7 +171,7 @@ func parseOffsetsQuery(values []string) (map[int]int, error) {
         if err != nil {
           return offsets, err
         }
-        offset, err := strconv.Atoi(parts[0])
+        offset, err := strconv.Atoi(parts[1])
         if err != nil {
           return offsets, err
         }
