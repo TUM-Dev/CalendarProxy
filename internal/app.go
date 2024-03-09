@@ -3,12 +3,15 @@ package internal
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	ics "github.com/arran4/golang-ical"
 	"github.com/getsentry/sentry-go"
@@ -38,6 +41,20 @@ type App struct {
 type Replacement struct {
 	key   string
 	value string
+}
+
+type Event struct {
+    RecurringId         string      `json:"recurringId"`
+    DtStart             time.Time   `json:"dtStart"`
+    DtEnd               time.Time   `json:"dtEnd"`
+    StartOffsetMinutes  int         `json:"startOffsetMinutes"`
+    EndOffsetMinutes    int         `json:"endOffsetMinutes"`
+}
+
+type Course struct {
+    Summary     string              `json:"summary"`
+    Hide        bool                `json:"hide"`
+    Recurrences map[string]Event    `json:"recurrences"`
 }
 
 // for sorting replacements by length, then alphabetically
@@ -101,6 +118,7 @@ func (a *App) Run() error {
 }
 
 func (a *App) configRoutes() {
+	a.engine.GET("/api/courses", a.handleGetCourses)
 	a.engine.Any("/", a.handleIcal)
 	f := http.FS(static)
 	a.engine.StaticFS("/files/", f)
@@ -135,6 +153,38 @@ func getUrl(c *gin.Context) string {
 	return fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token)
 }
 
+func parseOffsetsQuery(values []string) (map[int]int, error) {
+    offsets := make(map[int]int)
+
+    for _, value := range values {
+        parts := strings.Split(value, "+")
+        positive := true
+        if len(parts) != 2 {
+          parts = strings.Split(value, "-")
+          positive = false
+          if len(parts) != 2 {
+            return offsets, errors.New("OffsetsQuery was malformed")
+          }
+        }
+
+        id, err := strconv.Atoi(parts[0])
+        if err != nil {
+          return offsets, err
+        }
+        offset, err := strconv.Atoi(parts[1])
+        if err != nil {
+          return offsets, err
+        }
+
+        if positive == false { 
+          offset = -1 * offset
+        }
+
+        offsets[id] = offset
+    }
+    return offsets, nil
+}
+
 func (a *App) handleIcal(c *gin.Context) {
 	url := getUrl(c)
 	if url == "" {
@@ -150,11 +200,24 @@ func (a *App) handleIcal(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
-	cleaned, err := a.getCleanedCalendar(all)
+	hide := c.QueryArray("hide")
+	startOffsets, err := parseOffsetsQuery(c.QueryArray("startOffset"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+	endOffsets, err := parseOffsetsQuery(c.QueryArray("endOffset"))
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	cleaned, err := a.getCleanedCalendar(all, hide, startOffsets, endOffsets)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
 	response := []byte(cleaned.Serialize())
 	c.Header("Content-Type", "text/calendar")
 	c.Header("Content-Length", fmt.Sprintf("%d", len(response)))
@@ -164,7 +227,87 @@ func (a *App) handleIcal(c *gin.Context) {
 	}
 }
 
-func (a *App) getCleanedCalendar(all []byte) (*ics.Calendar, error) {
+func (a *App) handleGetCourses(c *gin.Context) {
+	url := getUrl(c)
+	if url == "" {
+		return
+	}
+	resp, err := http.Get(url)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
+	}
+	all, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	// detect all courses, de-duplicate them by their summary (lecture name)
+	courses := make(map[string]Course)
+	for _, component := range cal.Components {
+		switch component.(type) {
+		case *ics.VEvent:
+			vEvent := component.(*ics.VEvent)
+            event := Event{
+              RecurringId:  vEvent.GetProperty("X-CO-RECURRINGID").Value,
+              StartOffsetMinutes: 0,
+              EndOffsetMinutes: 0,
+            }
+
+            if event.DtStart, err = vEvent.GetStartAt(); err != nil {
+              continue
+            }
+            if event.DtEnd, err = vEvent.GetEndAt(); err != nil {
+              continue
+            }
+
+			eventSummary := vEvent.GetProperty(ics.ComponentPropertySummary).Value
+            course, exists := courses[eventSummary]
+
+            if exists == false {
+              course = Course{
+                Summary: eventSummary,
+                Hide: false,
+                Recurrences: map[string]Event{},
+              }
+            } 
+
+            // only add recurring events
+            if event.RecurringId != "" {
+              course.Recurrences[event.RecurringId] = event
+            }
+            courses[eventSummary] = course
+
+		default:
+			continue
+		}
+	}
+
+	c.JSON(http.StatusOK, courses)
+}
+
+func stringEqualsOneOf(target string, listOfStrings []string) bool {
+	for _, element := range listOfStrings {
+		if target == element {
+			return true
+		}
+	}
+	return false
+}
+
+func (a *App) getCleanedCalendar(
+  all []byte,
+  hide []string,
+  startOffsets map[int]int,
+  endOffsets map[int]int,
+) (*ics.Calendar, error) {
 	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
 	if err != nil {
 		return nil, err
@@ -178,11 +321,23 @@ func (a *App) getCleanedCalendar(all []byte) (*ics.Calendar, error) {
 		switch component.(type) {
 		case *ics.VEvent:
 			event := component.(*ics.VEvent)
+
+			// check if the summary contains any of the hidden keys, and if yes, skip it
+			eventSummary := event.GetProperty(ics.ComponentPropertySummary).Value
+			shouldHideEvent := stringEqualsOneOf(eventSummary, hide)
+			if shouldHideEvent {
+				continue
+			}
+
 			dedupKey := fmt.Sprintf("%s-%s", event.GetProperty(ics.ComponentPropertySummary).Value, event.GetProperty(ics.ComponentPropertyDtStart))
 			if _, ok := hasLecture[dedupKey]; ok {
 				continue
 			}
 			hasLecture[dedupKey] = true // mark event as seen
+
+            if recurringId, err := strconv.Atoi(event.GetProperty("X-CO-RECURRINGID").Value); err == nil {
+                a.adjustEventTimes(event, startOffsets[recurringId], endOffsets[recurringId])
+            }
 			a.cleanEvent(event)
 			newComponents = append(newComponents, event)
 		default: // keep everything that is not an event (metadata etc.)
@@ -217,6 +372,28 @@ var unneeded = []string{
 }
 
 var reRoom = regexp.MustCompile("^(.*?),.*(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\\d)\\.\\d+")
+
+func (a *App) adjustEventTimes(event *ics.VEvent, startOffset int, endOffset int) {
+    if startOffset != 0 {
+        if start, err := event.GetStartAt(); err == nil {
+          start = start.Add(time.Minute * time.Duration(startOffset))
+          event.SetStartAt(start)
+
+          if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
+            event.SetDescription(d.Value + fmt.Sprintf("; start offset: %d", startOffset))
+          }
+        }
+    }
+    if endOffset != 0 {
+        if end, err := event.GetEndAt(); err == nil {
+          end = end.Add(time.Minute * time.Duration(endOffset))
+          event.SetEndAt(end)
+          if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
+            event.SetDescription(d.Value + fmt.Sprintf("; end offset: %dm", endOffset))
+          }
+        }
+    }
+}
 
 func (a *App) cleanEvent(event *ics.VEvent) {
 	summary := ""

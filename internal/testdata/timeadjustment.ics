@@ -1,0 +1,70 @@
+BEGIN:VCALENDAR
+METHOD:PUBLISH
+VERSION:2.0
+CALSCALE:GREGORIAN
+X-WR-TIMEZONE:Europe/Vienna
+X-PUBLISHED-TTL:PT1H0M
+PRODID:-//Technische Universität München//DE
+X-WR-CALNAME:Demo Name
+X-WR-CALDESC:Demo Name@ Technische Universität München
+BEGIN:VEVENT
+UID:890763095@tum.de
+DTSTAMP:20240205T143746Z
+STATUS:CONFIRMED
+CLASS:PUBLIC
+URL:https://campus.tum.de/tumonline/wbLv.wbShowLVDetail?pStpSpNr=95069
+ 8580
+SUMMARY:Practical Course: Open Source Lab (IN0012\, IN2106\, IN4308) PR\,
+  Standardgruppe
+DESCRIPTION:fix\; Abhaltung\; Presentation Session\; 
+DTSTART:20240109T170000Z
+DTEND:20240109T190000Z
+LOCATION:Online: Videokonferenz\nZoom etc.
+X-CO-RECURRINGID:583745
+END:VEVENT
+BEGIN:VEVENT
+UID:890763084@tum.de
+DTSTAMP:20240205T143746Z
+STATUS:CONFIRMED
+CLASS:PUBLIC
+URL:https://campus.tum.de/tumonline/wbLv.wbShowLVDetail?pStpSpNr=95069
+ 8580
+SUMMARY:Practical Course: Open Source Lab (IN0012\, IN2106\, IN4308) PR\,
+  Standardgruppe
+DESCRIPTION:fix\; Abhaltung\; Presentation Session\; 
+DTSTART:20231113T170000Z
+DTEND:20231113T190000Z
+LOCATION:Online: Videokonferenz\nZoom etc.
+X-CO-RECURRINGID:583744
+END:VEVENT
+BEGIN:VEVENT
+UID:890763080@tum.de
+DTSTAMP:20240205T143746Z
+STATUS:CONFIRMED
+CLASS:PUBLIC
+URL:https://campus.tum.de/tumonline/wbLv.wbShowLVDetail?pStpSpNr=95069
+ 8580
+SUMMARY:Practical Course: Open Source Lab (IN0012\, IN2106\, IN4308) PR\,
+  Standardgruppe
+DESCRIPTION:fix\; Abhaltung\; Open Source\, Open Source DEMO agenda\; 
+DTSTART:20231023T160000Z
+DTEND:20231023T180000Z
+LOCATION:Online: Videokonferenz\nZoom etc.
+X-CO-RECURRINGID:
+END:VEVENT
+BEGIN:VEVENT
+UID:890763097@tum.de
+DTSTAMP:20240205T143746Z
+STATUS:CONFIRMED
+CLASS:PUBLIC
+URL:https://campus.tum.de/tumonline/wbLv.wbShowLVDetail?pStpSpNr=95069
+ 8580
+SUMMARY:Practical Course: Open Source Lab (IN0012\, IN2106\, IN4308) PR\,
+  Standardgruppe
+DESCRIPTION:fix\; Abhaltung\; Presentation Session\; 
+DTSTART:20240206T170000Z
+DTEND:20240206T190000Z
+LOCATION:Online: Videokonferenz\nZoom etc.
+X-CO-RECURRINGID:583745
+END:VEVENT
+END:VCALENDAR
