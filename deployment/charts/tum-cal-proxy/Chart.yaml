@@ -1,6 +1,0 @@
-name: tum-cal-proxy
-description: tum-cal-proxy
-version: 1.0.0
-apiVersion: v1
-deprecated: false
-icon: https://cal.tum.app/favicon.png
