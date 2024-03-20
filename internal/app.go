@@ -93,7 +93,8 @@ func (a *App) Run() error {
 	gin.SetMode("release")
 	a.engine = gin.New()
 	a.engine.Use(sentrygin.New(sentrygin.Options{}))
-	a.engine.Use(gin.Logger(), gin.Recovery())
+	logger := gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/health"}})
+	a.engine.Use(logger, gin.Recovery())
 	a.configRoutes()
 
 	// Start the engines
