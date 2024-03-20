@@ -1,4 +1,4 @@
-FROM golang:1.21.5-alpine3.17 as builder
+FROM golang:1.22-alpine3.19 as builder
 
 # Ca-certificates are required to call HTTPS endpoints.
 RUN apk update && apk add --no-cache ca-certificates tzdata alpine-sdk bash && update-ca-certificates
@@ -18,12 +18,15 @@ COPY internal internal
 ARG version=dev
 # Compile statically
 RUN CGO_ENABLED=0 go build -ldflags "-w -extldflags '-static' -X internal/app.Version=${version}" -o /proxy cmd/proxy/proxy.go
+RUN CGO_ENABLED=0 go build -ldflags "-w -extldflags '-static'" -o /healthcheck cmd/healthcheck/healthcheck.go
 
 FROM scratch
 
 COPY --from=builder /proxy /proxy
+COPY --from=builder /healthcheck /healthcheck
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 EXPOSE 4321
+HEALTHCHECK --interval=1s --timeout=1s --start-period=2s --retries=3 CMD [ "/healthcheck" ]
 
 CMD ["/proxy"]

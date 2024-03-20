@@ -101,6 +101,11 @@ func (a *App) Run() error {
 }
 
 func (a *App) configRoutes() {
+	a.engine.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "ok",
+		})
+	})
 	a.engine.Any("/", a.handleIcal)
 	f := http.FS(static)
 	a.engine.StaticFS("/files/", f)
