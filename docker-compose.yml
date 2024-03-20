@@ -2,6 +2,7 @@ version: "3.8"
 services:
   calendarproxy:
     image: ghcr.io/tum-dev/calendarproxy/server:latest
+    restart: unless-stopped
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.calendarproxy.entrypoints=web"
