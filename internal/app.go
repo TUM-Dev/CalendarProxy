@@ -93,7 +93,8 @@ func (a *App) Run() error {
 	gin.SetMode("release")
 	a.engine = gin.New()
 	a.engine.Use(sentrygin.New(sentrygin.Options{}))
-	a.engine.Use(gin.Logger(), gin.Recovery())
+	logger := gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/health"}})
+	a.engine.Use(logger, gin.Recovery())
 	a.configRoutes()
 
 	// Start the engines
@@ -101,6 +102,11 @@ func (a *App) Run() error {
 }
 
 func (a *App) configRoutes() {
+	a.engine.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "ok",
+		})
+	})
 	a.engine.Any("/", a.handleIcal)
 	f := http.FS(static)
 	a.engine.StaticFS("/files/", f)
@@ -218,6 +224,9 @@ var unneeded = []string{
 
 var reRoom = regexp.MustCompile("^(.*?),.*(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\\d)\\.\\d+")
 
+// matches strings like: (5612.03.017), (5612.EG.017), (5612.EG.010B)
+var reNavigaTUM = regexp.MustCompile("\\(\\d{4}\\.[a-zA-Z0-9]{2}\\.\\d{3}[A-Z]?\\)")
+
 func (a *App) cleanEvent(event *ics.VEvent) {
 	summary := ""
 	if s := event.GetProperty(ics.ComponentPropertySummary); s != nil {
@@ -253,6 +262,10 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 		if building, ok := a.buildingReplacements[results[2]]; ok {
 			description = location + "\n" + description
 			event.SetLocation(building)
+		}
+		if roomID := reNavigaTUM.FindString(location); roomID != "" {
+			roomID = strings.Trim(roomID, "()")
+			description = fmt.Sprintf("https://nav.tum.de/room/%s\n%s", roomID, description)
 		}
 	}
 	event.SetDescription(description)
