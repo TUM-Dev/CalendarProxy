@@ -16,6 +16,12 @@ services:
 
     networks:
       - traefik_traefik
+    # security
+    read_only: true
+    user: "1000:3000"
+    privileged: false
+    cap_drop:
+      - ALL
 
 networks:
   traefik_traefik:

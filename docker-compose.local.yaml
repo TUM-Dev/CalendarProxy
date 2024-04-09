@@ -1,0 +1,12 @@
+services:
+  cal-proxy:
+    build: .
+    ports:
+      - 4321:4321
+    restart: always
+    # security
+    read_only: true
+    user: "1000:3000"
+    privileged: false
+    cap_drop:
+      - ALL
