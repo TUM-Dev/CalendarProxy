@@ -91,13 +91,15 @@ func TestLocationReplacement(t *testing.T) {
 		return
 	}
 	location := calendar.Components[0].(*ics.VEvent).GetProperty(ics.ComponentPropertyLocation).Value
-	if location != "Boltzmannstr. 15\\, 85748 Garching b. München" {
-		t.Errorf("MW 1801\\, Ernst-Schmidt-Hörsaal (5508.02.801) should be shortened to Boltzmannstr. 15\\, 85748 Garching b. München but is %s", location)
+	expectedLocation := "Boltzmannstr. 15\\, 85748 Garching b. München"
+	if location != expectedLocation {
+		t.Errorf("Location should be shortened to %s but is %s", expectedLocation, location)
 		return
 	}
 	desc := calendar.Components[0].(*ics.VEvent).GetProperty(ics.ComponentPropertyDescription).Value
-	if desc != "MW 1801\\, Ernst-Schmidt-Hörsaal (5508.02.801)\\nEinführung in die Rechnerarchitektur\\nfix\\; Abhaltung\\;" {
-		t.Errorf("Description should be MW 1801\\, Ernst-Schmidt-Hörsaal (5508.02.801)\\nEinführung in die Rechnerarchitektur\\nfix\\; Abhaltung\\; but is %s", desc)
+	expectedDescription := "https://nav.tum.de/view/5508.02.801\\nMW 1801\\, Ernst-Schmidt-Hörsaal (5508.02.801)\\nEinführung in die Rechnerarchitektur\\nfix\\; Abhaltung\\;"
+	if desc != expectedDescription {
+		t.Errorf("Description should be %s but is %s", expectedDescription, desc)
 		return
 	}
 }
