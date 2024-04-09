@@ -97,7 +97,7 @@ func TestLocationReplacement(t *testing.T) {
 		return
 	}
 	desc := calendar.Components[0].(*ics.VEvent).GetProperty(ics.ComponentPropertyDescription).Value
-	expectedDescription := "https://nav.tum.de/view/5508.02.801\\nMW 1801\\, Ernst-Schmidt-Hörsaal (5508.02.801)\\nEinführung in die Rechnerarchitektur\\nfix\\; Abhaltung\\;"
+	expectedDescription := "https://nav.tum.de/room/5508.02.801\\nMW 1801\\, Ernst-Schmidt-Hörsaal (5508.02.801)\\nEinführung in die Rechnerarchitektur\\nfix\\; Abhaltung\\;"
 	if desc != expectedDescription {
 		t.Errorf("Description should be %s but is %s", expectedDescription, desc)
 		return
