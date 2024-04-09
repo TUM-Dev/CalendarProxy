@@ -264,9 +264,8 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 			event.SetLocation(building)
 		}
 		if roomID := reNavigaTUM.FindString(location); roomID != "" {
-			roomID = strings.Trim(navigaTUMURL, "()")
+			roomID = strings.Trim(roomID, "()")
 			description = fmt.Sprintf("https://nav.tum.de/room/%s\n%s", roomID, description)
-			description = navigaTUMURL + "\n" + description
 		}
 	}
 	event.SetDescription(description)
