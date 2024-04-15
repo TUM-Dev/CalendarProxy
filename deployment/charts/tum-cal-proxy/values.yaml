@@ -1,6 +1,0 @@
-namespace: tum-cal-proxy
-tag: main
-urls: 
-  - cal.tum.app
-  - cal.tum.sexy
-  - cal.bruck.me
