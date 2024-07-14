@@ -5,14 +5,10 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.calendarproxy.entrypoints=web"
+      - "traefik.http.routers.calendarproxy.entrypoints=webs"
+      - "traefik.http.routers.calendarproxy.tls.certresolver=leacme"
       - "traefik.http.routers.calendarproxy.rule=Host(`cal.tum.app`) || Host(`cal.tum.sexy`) || Host(`cal.bruck.me`)"
-      - "traefik.http.routers.calendarproxy.middlewares=webs-redirectscheme"
-
-      - "traefik.http.routers.calendarproxy-secure.entrypoints=webs"
-      - "traefik.http.routers.calendarproxy-secure.tls.certresolver=leacme"
-      - "traefik.http.routers.calendarproxy-secure.rule=Host(`cal.tum.app`) || Host(`cal.tum.sexy`) || Host(`cal.bruck.me`)"
-      - "traefik.http.services.calendarproxy-secure.loadbalancer.server.port=4321"
+      - "traefik.http.services.calendarproxy.loadbalancer.server.port=4321"
 
     networks:
       - traefik_traefik
