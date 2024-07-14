@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   calendarproxy:
     image: ghcr.io/tum-dev/calendarproxy/server:latest
