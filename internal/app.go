@@ -269,6 +269,8 @@ func (a *App) cleanEvent(event *ics.VEvent, vOnlyToken int) bool {
 		summary = strings.ReplaceAll(summary, replace, "")
 	}
 
+	summary = strings.TrimSuffix(summary, " , ") // remove trailing space comma space
+
 	event.SetSummary(summary)
 
 	//Remember the old title in the description
