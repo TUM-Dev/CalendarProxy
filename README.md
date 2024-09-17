@@ -2,19 +2,13 @@
 
 ![Alt text](image.png)
 
-This is a fork of the proxy service that simplifies and enhances the iCal export from TUM Online. It allows you to:
+This is a proxy service that simplifies and enhances the iCal export from TUM Online. It allows you to:
 
 - Shorten long lesson names, such as 'Grundlagen Betriebssysteme und Systemsoftware' → 'GBS'
 - Add locations that are recognized by Google / Apple Maps
 - Filter out unwanted events, such as cancelled, duplicate or optional ones
 
-Additionally, I've implemented filtering the calendar into Vorlesungen only and no Vorlesungen. This way, it is possible to colour-code Vorlesungen and non-Vorlesungen separately in calendar apps. To do this, add the query string vOnly, which can be yes or no. The following formats should work:
-
-```
-.../?pStud=ABCDEF&pToken=XYZ
-.../?pStud=ABCDEF&pToken=XYZ&vOnly=yes
-.../?pStud=ABCDEF&pToken=XYZ&vOnly=no
-```
+You can use the proxy service by visiting <https://cal.tum.app/> and following the instructions there.
 
 ## Development
 If you want to run the proxy service locally or contribute to the project, you will need:
