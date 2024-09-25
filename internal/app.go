@@ -211,10 +211,10 @@ func (a *App) getCleanedCalendar(all []byte, vOnlyToken int) (*ics.Calendar, err
 
 // matches tags like (IN0001) or [MA2012] and everything after.
 // unfortunate also matches wrong brackets like [MA123) but hey…
-var reTag = regexp.MustCompile(" ?[\\[(](ED|MW|SOM|CIT|MA|IN|WI|WIB)[0-9]+((_|-|,)[a-zA-Z0-9]+)*[\\])].*")
+var reTag = regexp.MustCompile(` ?[\[(](ED|MW|SOM|CIT|MA|IN|WI|WIB)[0-9]+((_|-|,)[a-zA-Z0-9]+)*[\])].*`)
 
 // Matches location and teacher from language course title
-var reLoc = regexp.MustCompile(" ?(München|Garching|Weihenstephan).+")
+var reLoc = regexp.MustCompile(` ?(München|Garching|Weihenstephan).+`)
 
 // Matches repeated whitespaces
 var reSpace = regexp.MustCompile(`\s\s+`)
@@ -232,10 +232,8 @@ var unneeded = []string{
 	"(Online)",
 }
 
-var reRoom = regexp.MustCompile("^(.*?),.*(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\\d)\\.\\d+")
-
 // matches strings like: (5612.03.017), (5612.EG.017), (5612.EG.010B)
-var reNavigaTUM = regexp.MustCompile("\\(\\d{4}\\.[a-zA-Z0-9]{2}\\.\\d{3}[A-Z]?\\)")
+var reNavigaTUM = regexp.MustCompile(`\((\d{4})\.[a-zA-Z0-9]{2}\.\d{3}[A-Z]?\)`)
 
 func (a *App) cleanEvent(event *ics.VEvent, vOnlyToken int) bool {
 	summary := ""
@@ -251,7 +249,7 @@ func (a *App) cleanEvent(event *ics.VEvent, vOnlyToken int) bool {
 
 	location := ""
 	if l := event.GetProperty(ics.ComponentPropertyLocation); l != nil {
-		location = strings.ReplaceAll(event.GetProperty(ics.ComponentPropertyLocation).Value, "\\", "")
+		location = strings.ReplaceAll(l.Value, "\\", "")
 	}
 
 	if vOnlyToken == 1 { // keep only events with "VO" in summary
@@ -276,13 +274,20 @@ func (a *App) cleanEvent(event *ics.VEvent, vOnlyToken int) bool {
 	//Remember the old title in the description
 	description = summary + "\n" + description
 
-	results := reRoom.FindStringSubmatch(location)
-	if len(results) == 3 {
-		if building, ok := a.buildingReplacements[results[2]]; ok {
+	results := reNavigaTUM.FindStringSubmatch(location)
+	if len(results) != 2 {
+		results = reNavigaTUM.FindStringSubmatch(description) // attempt to find any location info in desc if none is found in location
+	}
+	if len(results) == 2 {
+		if building, ok := a.buildingReplacements[results[1]]; ok {
 			description = location + "\n" + description
 			event.SetLocation(building)
 		}
-		if roomID := reNavigaTUM.FindString(location); roomID != "" {
+		roomID := reNavigaTUM.FindString(location)
+		if roomID == "" {
+			roomID = reNavigaTUM.FindString(description)
+		}
+		if roomID != "" {
 			roomID = strings.Trim(roomID, "()")
 			description = fmt.Sprintf("https://nav.tum.de/room/%s\n%s", roomID, description)
 		}
