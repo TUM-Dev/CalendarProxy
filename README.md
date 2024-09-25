@@ -16,7 +16,9 @@ Additionally, I've implemented filtering the calendar into Vorlesungen only and 
 .../?pStud=ABCDEF&pToken=XYZ&vOnly=no
 ```
 
-Also, any trailing space-comma-space is removed.
+Additional features:
+ - Any trailing space-comma-space is removed.
+ - location detection is reworked and is now based entirely off of location tags (for example, `(5508.02.801)`). It'll also get the location from the description, if necessary.
 ## Development
 If you want to run the proxy service locally or contribute to the project, you will need:
 
