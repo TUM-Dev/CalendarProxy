@@ -209,6 +209,9 @@ var reLoc = regexp.MustCompile(" ?(München|Garching|Weihenstephan).+")
 // Matches repeated whitespaces
 var reSpace = regexp.MustCompile(`\s\s+`)
 
+// Matches weird starting numbers like "0000002467 " in "0000002467 Semantik"
+var reWeirdStartingNumbers = regexp.MustCompile(`^0\d+ `)
+
 var unneeded = []string{
 	"Standardgruppe",
 	"PR",
@@ -251,6 +254,9 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 	for _, replace := range unneeded {
 		summary = strings.ReplaceAll(summary, replace, "")
 	}
+	// sometimes the summary has weird numbers attached like "0000002467 " in "0000002467 Semantik"
+	// What the heck? And why only sometimes???
+	summary = reWeirdStartingNumbers.ReplaceAllString(summary, "")
 
 	event.SetSummary(summary)
 
