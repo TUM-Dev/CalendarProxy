@@ -20,11 +20,11 @@ To run the service locally, follow these steps:
 
 - Clone this repository
   ```sh
-  git clone https://github.com/tum-calendar-proxy/tum-calendar-proxy.git
+  git clone https://github.com/TUM-Dev/CalendarProxy.git
   ```
-- Navigate to the project directory: 
+- Navigate to the project directory:
   ```sh
-  cd tum-calendar-proxy
+  cd CalendarProxy
   ```
 - Run the proxy server:
   ```sh

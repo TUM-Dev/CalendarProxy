@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"sort"
 	"strings"
@@ -71,6 +72,44 @@ func newApp() (*App, error) {
 	return &a, nil
 }
 
+func customLogFormatter(params gin.LogFormatterParams) string {
+	return fmt.Sprintf("[GIN] %v |%s %3d %s | %13v | %15s |%s %-7s%s %#v\n%s",
+		params.TimeStamp.Format("2006/01/02 - 15:04:05"),
+		params.StatusCodeColor(),
+		params.StatusCode,
+		params.ResetColor(),
+		params.Latency,
+		params.ClientIP,
+		params.MethodColor(),
+		params.Method,
+		params.ResetColor(),
+		hideTokens(params.Path),
+		params.ErrorMessage,
+	)
+}
+
+func hideTokens(path string) string {
+	u, err := url.Parse(path)
+	if err != nil {
+		return path
+	}
+
+	pStud := u.Query().Get("pStud")
+	pPers := u.Query().Get("pPers")
+	pToken := u.Query().Get("pToken")
+
+	if pToken == "" || (pStud == "" && pPers == "") {
+		return path
+	}
+
+	manyXes := strings.Repeat("X", 12)
+	tokenReplaced := pToken[:4] + manyXes
+	if pStud != "" {
+		return fmt.Sprintf("/?pStud=%s&pToken=%s", pStud[:4]+manyXes, tokenReplaced)
+	}
+	return fmt.Sprintf("/?pPers=%s&pToken=%s", pPers[:4]+manyXes, tokenReplaced)
+}
+
 func (a *App) Run() error {
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn:              "https://2fbc80ad1a99406cb72601d6a47240ce@glitch.exgen.io/4",
@@ -93,7 +132,7 @@ func (a *App) Run() error {
 	gin.SetMode("release")
 	a.engine = gin.New()
 	a.engine.Use(sentrygin.New(sentrygin.Options{}))
-	logger := gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/health"}})
+	logger := gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/health"}, Formatter: customLogFormatter})
 	a.engine.Use(logger, gin.Recovery())
 	a.configRoutes()
 
