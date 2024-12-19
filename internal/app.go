@@ -253,7 +253,7 @@ func (a *App) cleanEvent(event *ics.VEvent, filterToken string) bool {
 	if l := event.GetProperty(ics.ComponentPropertyLocation); l != nil {
 		location = strings.ReplaceAll(l.Value, "\\", "")
 	}
-
+	
 	if filterToken == "vo" { // keep only events with "VO" in summary
 		keepEvent = strings.Contains(summary, "VO")
 	} else if filterToken == "pr" {  // keep only events with "FA" in summary
