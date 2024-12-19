@@ -119,8 +119,8 @@ func getUrl(c *gin.Context) (string, int) {
 	stud := c.Query("pStud")
 	pers := c.Query("pPers")
 	token := c.Query("pToken")
-	vorlesungOnly := c.Query("vOnly")
-	vOnlyToken := 0
+	filter := c.Query("filter")
+	filterToken := "none"
 	if (stud == "" && pers == "") || token == "" {
 		// Missing parameters: just serve our landing page
 		f, err := static.Open("static/index.html")
@@ -137,20 +137,22 @@ func getUrl(c *gin.Context) (string, int) {
 		}
 		return "", 0
 	}
-	if vorlesungOnly == "yes" {
-		vOnlyToken = 1
-	} else if vorlesungOnly == "no" {
-		vOnlyToken = -1
+	if filter == "vo" {
+		filterToken = "vo"
+	} else if filter == "pr" {
+		filterToken = "pr"
+	} else if filter == "ot" {
+		filterToken = "other"
 	}
 
 	if stud == "" {
-		return fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pPers=%s&pToken=%s", pers, token), vOnlyToken
+		return fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pPers=%s&pToken=%s", pers, token), filterToken
 	}
-	return fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token), vOnlyToken
+	return fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token), filterToken
 }
 
 func (a *App) handleIcal(c *gin.Context) {
-	url, vOnlyToken := getUrl(c)
+	url, filterToken := getUrl(c)
 	if url == "" {
 		return
 	}
@@ -164,7 +166,7 @@ func (a *App) handleIcal(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
-	cleaned, err := a.getCleanedCalendar(all, vOnlyToken)
+	cleaned, err := a.getCleanedCalendar(all, filterToken)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -178,7 +180,7 @@ func (a *App) handleIcal(c *gin.Context) {
 	}
 }
 
-func (a *App) getCleanedCalendar(all []byte, vOnlyToken int) (*ics.Calendar, error) {
+func (a *App) getCleanedCalendar(all []byte, filterToken string) (*ics.Calendar, error) {
 	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
 	if err != nil {
 		return nil, err
@@ -197,7 +199,7 @@ func (a *App) getCleanedCalendar(all []byte, vOnlyToken int) (*ics.Calendar, err
 				continue
 			}
 			hasLecture[dedupKey] = true // mark event as seen
-			keepEvent := a.cleanEvent(event, vOnlyToken)
+			keepEvent := a.cleanEvent(event, filterToken)
 			if keepEvent {
 				newComponents = append(newComponents, event)
 			}
@@ -235,7 +237,7 @@ var unneeded = []string{
 // matches strings like: (5612.03.017), (5612.EG.017), (5612.EG.010B)
 var reNavigaTUM = regexp.MustCompile(`\((\d{4})\.[a-zA-Z0-9]{2}\.\d{3}[A-Z]?\)`)
 
-func (a *App) cleanEvent(event *ics.VEvent, vOnlyToken int) bool {
+func (a *App) cleanEvent(event *ics.VEvent, filterToken string) bool {
 	summary := ""
 	keepEvent := true
 	if s := event.GetProperty(ics.ComponentPropertySummary); s != nil {
@@ -252,10 +254,12 @@ func (a *App) cleanEvent(event *ics.VEvent, vOnlyToken int) bool {
 		location = strings.ReplaceAll(l.Value, "\\", "")
 	}
 
-	if vOnlyToken == 1 { // keep only events with "VO" in summary
+	if filterToken == "vo" { // keep only events with "VO" in summary
 		keepEvent = strings.Contains(summary, "VO")
-	} else if vOnlyToken == -1 { // keep only events without "VO" in summary
-		keepEvent = !strings.Contains(summary, "VO")
+	} else if filterToken == "pr" {  // keep only events with "FA" in summary
+		keepEvent = strings.Contains(summary, "FA")
+	} else if filterToken == "other" { // keep only events without "VO" or "FA" in summary
+		keepEvent = !(strings.Contains(summary, "VO") || strings.Contains(summary, "FA"))
 	} // else, keepEvent stays true regardless
 
 	//Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
