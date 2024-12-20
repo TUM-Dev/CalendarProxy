@@ -115,7 +115,7 @@ func (a *App) configRoutes() {
 	})
 }
 
-func getUrl(c *gin.Context) (string, int) {
+func getUrl(c *gin.Context) (string, string) {
 	stud := c.Query("pStud")
 	pers := c.Query("pPers")
 	token := c.Query("pToken")
@@ -127,15 +127,15 @@ func getUrl(c *gin.Context) (string, int) {
 		if err != nil {
 			sentry.CaptureException(err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
-			return "", 0
+			return "", ""
 		}
 
 		if _, err := io.Copy(c.Writer, f); err != nil {
 			sentry.CaptureException(err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
-			return "", 0
+			return "", ""
 		}
-		return "", 0
+		return "", ""
 	}
 	if filter == "vo" {
 		filterToken = "vo"
@@ -253,10 +253,10 @@ func (a *App) cleanEvent(event *ics.VEvent, filterToken string) bool {
 	if l := event.GetProperty(ics.ComponentPropertyLocation); l != nil {
 		location = strings.ReplaceAll(l.Value, "\\", "")
 	}
-	
+
 	if filterToken == "vo" { // keep only events with "VO" in summary
 		keepEvent = strings.Contains(summary, "VO")
-	} else if filterToken == "pr" {  // keep only events with "FA" in summary
+	} else if filterToken == "pr" { // keep only events with "FA" in summary
 		keepEvent = strings.Contains(summary, "FA")
 	} else if filterToken == "other" { // keep only events without "VO" or "FA" in summary
 		keepEvent = !(strings.Contains(summary, "VO") || strings.Contains(summary, "FA"))
