@@ -8,12 +8,13 @@ This is a fork of the proxy service that simplifies and enhances the iCal export
 - Add locations that are recognized by Google / Apple Maps
 - Filter out unwanted events, such as cancelled, duplicate or optional ones
 
-Additionally, I've implemented filtering the calendar into Vorlesungen only and no Vorlesungen. This way, it is possible to colour-code Vorlesungen and non-Vorlesungen separately in calendar apps. To do this, add the query string vOnly, which can be yes or no. The following formats should work:
+Additionally, I've implemented filtering the calendar into Vorlesungen, Prüfungen and other. This way, it is possible to colour-code by category in calendar apps. To do this, add the query string filter, which can be "vo" for Vorlesungen, "pr" for Prüfungen, or "ot" for other (that is, everything that isn't a Vorlesung or Prüfung). The following formats should work:
 
 ```
-.../?pStud=ABCDEF&pToken=XYZ
-.../?pStud=ABCDEF&pToken=XYZ&vOnly=yes
-.../?pStud=ABCDEF&pToken=XYZ&vOnly=no
+.../?pStud=ABCDEF&pToken=XYZ             <-- calendar with everything
+.../?pStud=ABCDEF&pToken=XYZ&filter=vo   <-- only Vorlesungen
+.../?pStud=ABCDEF&pToken=XYZ&filter=pr   <-- only Prüfungen
+.../?pStud=ABCDEF&pToken=XYZ&filter=ot   <-- everything ex. Vorlesungen/Prüfungen
 ```
 
 Additional features:
