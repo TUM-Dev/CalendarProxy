@@ -5,10 +5,13 @@ function generateLink() {
         input.setAttribute("class", "invalid")
         return
     }
-    copyToClipboard(input.value.replace(/https:\/\/campus.tum.de\/tumonlinej\/.{2}\/termin\/ical/i, "https://cal.tum.app").replace("\t", ""))
+    const link = input.value.replace(/https:\/\/campus.tum.de\/tumonlinej\/.{2}\/termin\/ical/i, "https://cal.tum.app").replace("\t", "")
+    copyToClipboard(link)
     let btn = document.getElementById("generateLinkBtn")
     btn.innerText = "copied!"
     btn.setAttribute("style", "background-color: #4CAF50;")
+
+    input.value = link
 }
 
 
