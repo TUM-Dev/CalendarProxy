@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"sort"
 	"strconv"
@@ -44,17 +45,17 @@ type Replacement struct {
 }
 
 type Event struct {
-    RecurringId         string      `json:"recurringId"`
-    DtStart             time.Time   `json:"dtStart"`
-    DtEnd               time.Time   `json:"dtEnd"`
-    StartOffsetMinutes  int         `json:"startOffsetMinutes"`
-    EndOffsetMinutes    int         `json:"endOffsetMinutes"`
+	RecurringId        string    `json:"recurringId"`
+	DtStart            time.Time `json:"dtStart"`
+	DtEnd              time.Time `json:"dtEnd"`
+	StartOffsetMinutes int       `json:"startOffsetMinutes"`
+	EndOffsetMinutes   int       `json:"endOffsetMinutes"`
 }
 
 type Course struct {
-    Summary     string              `json:"summary"`
-    Hide        bool                `json:"hide"`
-    Recurrences map[string]Event    `json:"recurrences"`
+	Summary     string           `json:"summary"`
+	Hide        bool             `json:"hide"`
+	Recurrences map[string]Event `json:"recurrences"`
 }
 
 // for sorting replacements by length, then alphabetically
@@ -88,6 +89,44 @@ func newApp() (*App, error) {
 	return &a, nil
 }
 
+func customLogFormatter(params gin.LogFormatterParams) string {
+	return fmt.Sprintf("[GIN] %v |%s %3d %s | %13v | %15s |%s %-7s%s %#v\n%s",
+		params.TimeStamp.Format("2006/01/02 - 15:04:05"),
+		params.StatusCodeColor(),
+		params.StatusCode,
+		params.ResetColor(),
+		params.Latency,
+		params.ClientIP,
+		params.MethodColor(),
+		params.Method,
+		params.ResetColor(),
+		hideTokens(params.Path),
+		params.ErrorMessage,
+	)
+}
+
+func hideTokens(path string) string {
+	u, err := url.Parse(path)
+	if err != nil {
+		return path
+	}
+
+	pStud := u.Query().Get("pStud")
+	pPers := u.Query().Get("pPers")
+	pToken := u.Query().Get("pToken")
+
+	if pToken == "" || (pStud == "" && pPers == "") {
+		return path
+	}
+
+	manyXes := strings.Repeat("X", 12)
+	tokenReplaced := pToken[:4] + manyXes
+	if pStud != "" {
+		return fmt.Sprintf("/?pStud=%s&pToken=%s", pStud[:4]+manyXes, tokenReplaced)
+	}
+	return fmt.Sprintf("/?pPers=%s&pToken=%s", pPers[:4]+manyXes, tokenReplaced)
+}
+
 func (a *App) Run() error {
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn:              "https://2fbc80ad1a99406cb72601d6a47240ce@glitch.exgen.io/4",
@@ -110,7 +149,8 @@ func (a *App) Run() error {
 	gin.SetMode("release")
 	a.engine = gin.New()
 	a.engine.Use(sentrygin.New(sentrygin.Options{}))
-	a.engine.Use(gin.Logger(), gin.Recovery())
+	logger := gin.LoggerWithConfig(gin.LoggerConfig{SkipPaths: []string{"/health"}, Formatter: customLogFormatter})
+	a.engine.Use(logger, gin.Recovery())
 	a.configRoutes()
 
 	// Start the engines
@@ -119,6 +159,11 @@ func (a *App) Run() error {
 
 func (a *App) configRoutes() {
 	a.engine.GET("/api/courses", a.handleGetCourses)
+	a.engine.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "ok",
+		})
+	})
 	a.engine.Any("/", a.handleIcal)
 	f := http.FS(static)
 	a.engine.StaticFS("/files/", f)
@@ -154,35 +199,35 @@ func getUrl(c *gin.Context) string {
 }
 
 func parseOffsetsQuery(values []string) (map[int]int, error) {
-    offsets := make(map[int]int)
+	offsets := make(map[int]int)
 
-    for _, value := range values {
-        parts := strings.Split(value, "+")
-        positive := true
-        if len(parts) != 2 {
-          parts = strings.Split(value, "-")
-          positive = false
-          if len(parts) != 2 {
-            return offsets, errors.New("OffsetsQuery was malformed")
-          }
-        }
+	for _, value := range values {
+		parts := strings.Split(value, "+")
+		positive := true
+		if len(parts) != 2 {
+			parts = strings.Split(value, "-")
+			positive = false
+			if len(parts) != 2 {
+				return offsets, errors.New("OffsetsQuery was malformed")
+			}
+		}
 
-        id, err := strconv.Atoi(parts[0])
-        if err != nil {
-          return offsets, err
-        }
-        offset, err := strconv.Atoi(parts[1])
-        if err != nil {
-          return offsets, err
-        }
+		id, err := strconv.Atoi(parts[0])
+		if err != nil {
+			return offsets, err
+		}
+		offset, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return offsets, err
+		}
 
-        if positive == false { 
-          offset = -1 * offset
-        }
+		if positive == false {
+			offset = -1 * offset
+		}
 
-        offsets[id] = offset
-    }
-    return offsets, nil
+		offsets[id] = offset
+	}
+	return offsets, nil
 }
 
 func (a *App) handleIcal(c *gin.Context) {
@@ -255,35 +300,35 @@ func (a *App) handleGetCourses(c *gin.Context) {
 		switch component.(type) {
 		case *ics.VEvent:
 			vEvent := component.(*ics.VEvent)
-            event := Event{
-              RecurringId:  vEvent.GetProperty("X-CO-RECURRINGID").Value,
-              StartOffsetMinutes: 0,
-              EndOffsetMinutes: 0,
-            }
+			event := Event{
+				RecurringId:        vEvent.GetProperty("X-CO-RECURRINGID").Value,
+				StartOffsetMinutes: 0,
+				EndOffsetMinutes:   0,
+			}
 
-            if event.DtStart, err = vEvent.GetStartAt(); err != nil {
-              continue
-            }
-            if event.DtEnd, err = vEvent.GetEndAt(); err != nil {
-              continue
-            }
+			if event.DtStart, err = vEvent.GetStartAt(); err != nil {
+				continue
+			}
+			if event.DtEnd, err = vEvent.GetEndAt(); err != nil {
+				continue
+			}
 
 			eventSummary := vEvent.GetProperty(ics.ComponentPropertySummary).Value
-            course, exists := courses[eventSummary]
+			course, exists := courses[eventSummary]
 
-            if exists == false {
-              course = Course{
-                Summary: eventSummary,
-                Hide: false,
-                Recurrences: map[string]Event{},
-              }
-            } 
+			if exists == false {
+				course = Course{
+					Summary:     eventSummary,
+					Hide:        false,
+					Recurrences: map[string]Event{},
+				}
+			}
 
-            // only add recurring events
-            if event.RecurringId != "" {
-              course.Recurrences[event.RecurringId] = event
-            }
-            courses[eventSummary] = course
+			// only add recurring events
+			if event.RecurringId != "" {
+				course.Recurrences[event.RecurringId] = event
+			}
+			courses[eventSummary] = course
 
 		default:
 			continue
@@ -303,10 +348,10 @@ func stringEqualsOneOf(target string, listOfStrings []string) bool {
 }
 
 func (a *App) getCleanedCalendar(
-  all []byte,
-  hide []string,
-  startOffsets map[int]int,
-  endOffsets map[int]int,
+	all []byte,
+	hide []string,
+	startOffsets map[int]int,
+	endOffsets map[int]int,
 ) (*ics.Calendar, error) {
 	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
 	if err != nil {
@@ -335,9 +380,9 @@ func (a *App) getCleanedCalendar(
 			}
 			hasLecture[dedupKey] = true // mark event as seen
 
-            if recurringId, err := strconv.Atoi(event.GetProperty("X-CO-RECURRINGID").Value); err == nil {
-                a.adjustEventTimes(event, startOffsets[recurringId], endOffsets[recurringId])
-            }
+			if recurringId, err := strconv.Atoi(event.GetProperty("X-CO-RECURRINGID").Value); err == nil {
+				a.adjustEventTimes(event, startOffsets[recurringId], endOffsets[recurringId])
+			}
 			a.cleanEvent(event)
 			newComponents = append(newComponents, event)
 		default: // keep everything that is not an event (metadata etc.)
@@ -358,6 +403,9 @@ var reLoc = regexp.MustCompile(" ?(München|Garching|Weihenstephan).+")
 // Matches repeated whitespaces
 var reSpace = regexp.MustCompile(`\s\s+`)
 
+// Matches weird starting numbers like "0000002467 " in "0000002467 Semantik"
+var reWeirdStartingNumbers = regexp.MustCompile(`^0\d+ `)
+
 var unneeded = []string{
 	"Standardgruppe",
 	"PR",
@@ -373,26 +421,29 @@ var unneeded = []string{
 
 var reRoom = regexp.MustCompile("^(.*?),.*(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\\d)\\.\\d+")
 
-func (a *App) adjustEventTimes(event *ics.VEvent, startOffset int, endOffset int) {
-    if startOffset != 0 {
-        if start, err := event.GetStartAt(); err == nil {
-          start = start.Add(time.Minute * time.Duration(startOffset))
-          event.SetStartAt(start)
+// matches strings like: (5612.03.017), (5612.EG.017), (5612.EG.010B)
+var reNavigaTUM = regexp.MustCompile("\\(\\d{4}\\.[a-zA-Z0-9]{2}\\.\\d{3}[A-Z]?\\)")
 
-          if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
-            event.SetDescription(d.Value + fmt.Sprintf("; start offset: %d", startOffset))
-          }
-        }
-    }
-    if endOffset != 0 {
-        if end, err := event.GetEndAt(); err == nil {
-          end = end.Add(time.Minute * time.Duration(endOffset))
-          event.SetEndAt(end)
-          if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
-            event.SetDescription(d.Value + fmt.Sprintf("; end offset: %dm", endOffset))
-          }
-        }
-    }
+func (a *App) adjustEventTimes(event *ics.VEvent, startOffset int, endOffset int) {
+	if startOffset != 0 {
+		if start, err := event.GetStartAt(); err == nil {
+			start = start.Add(time.Minute * time.Duration(startOffset))
+			event.SetStartAt(start)
+
+			if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
+				event.SetDescription(d.Value + fmt.Sprintf("; start offset: %d", startOffset))
+			}
+		}
+	}
+	if endOffset != 0 {
+		if end, err := event.GetEndAt(); err == nil {
+			end = end.Add(time.Minute * time.Duration(endOffset))
+			event.SetEndAt(end)
+			if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
+				event.SetDescription(d.Value + fmt.Sprintf("; end offset: %dm", endOffset))
+			}
+		}
+	}
 }
 
 func (a *App) cleanEvent(event *ics.VEvent) {
@@ -419,6 +470,9 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 	for _, replace := range unneeded {
 		summary = strings.ReplaceAll(summary, replace, "")
 	}
+	// sometimes the summary has weird numbers attached like "0000002467 " in "0000002467 Semantik"
+	// What the heck? And why only sometimes???
+	summary = reWeirdStartingNumbers.ReplaceAllString(summary, "")
 
 	event.SetSummary(summary)
 
@@ -430,6 +484,10 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 		if building, ok := a.buildingReplacements[results[2]]; ok {
 			description = location + "\n" + description
 			event.SetLocation(building)
+		}
+		if roomID := reNavigaTUM.FindString(location); roomID != "" {
+			roomID = strings.Trim(roomID, "()")
+			description = fmt.Sprintf("https://nav.tum.de/room/%s\n%s", roomID, description)
 		}
 	}
 	event.SetDescription(description)

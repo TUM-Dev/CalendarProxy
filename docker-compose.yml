@@ -1,0 +1,23 @@
+services:
+  calendarproxy:
+    image: ghcr.io/tum-dev/calendarproxy/server:latest
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.calendarproxy.entrypoints=webs"
+      - "traefik.http.routers.calendarproxy.tls.certresolver=leacme"
+      - "traefik.http.routers.calendarproxy.rule=Host(`cal.tum.app`) || Host(`cal.tum.sexy`)"
+      - "traefik.http.services.calendarproxy.loadbalancer.server.port=4321"
+
+    networks:
+      - traefik_traefik
+    # security
+    read_only: true
+    user: "1000:3000"
+    privileged: false
+    cap_drop:
+      - ALL
+
+networks:
+  traefik_traefik:
+    external: true # comment out for local use

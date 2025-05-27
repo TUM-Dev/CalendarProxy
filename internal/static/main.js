@@ -1,16 +1,21 @@
 const hiddenCourses = new Set();
 const startOffsetRecurrences = new Map();
 const endOffsetRecurrences = new Map();
+let originalLink = null;
 
 function getAndCheckCalLink() {
     let input = document.getElementById("tumCalLink")
     input.removeAttribute("class")
-    if (!input.value.match(/https:\/\/campus.tum.de\/tumonlinej\/.{2}\/termin\/ical\?(pStud|pPers)=[0-9,A-Z]*&pToken=[0-9,A-Z]*/i)) {
+    let value = input.value;
+    if (originalLink !== null) {
+        value = originalLink;
+    }
+    if (!value.match(/https:\/\/campus.tum.de\/tumonlinej\/.{2}\/termin\/ical\?(pStud|pPers)=[0-9,A-Z]*&pToken=[0-9,A-Z]*/i)) {
         input.setAttribute("class", "invalid")
         return undefined;
     }
 
-    return input.value;
+    return value;
 }
 
 function setCopyButton(state /* copied | reset */) {
@@ -46,10 +51,15 @@ function generateLink() {
 
     adjustedLink.search = queryParams;
     copyToClipboard(adjustedLink.toString());
-    setCopyButton("copied")
+    setCopyButton("copied");
+
+    originalLink = calLink;
+    document.getElementById("tumCalLink").value = adjustedLink.toString();
 }
 
 function reloadCourses() {
+    originalLink = null;
+
     const calLink = getAndCheckCalLink();
     if (!calLink)
         return;
