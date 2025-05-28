@@ -1,8 +1,10 @@
 package internal
 
 import (
+	"bytes"
 	"io"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 
@@ -60,20 +62,20 @@ func TestReplacement(t *testing.T) {
 
 func TestDeduplication(t *testing.T) {
 	testData, app := getTestData(t, "duplication.ics")
-	calendar, err := app.getCleanedCalendar([]byte(testData), []string{}, map[int]int{}, map[int]int{})
+	calendar, err := app.getCleanedCalendar([]byte(testData), []string{})
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	if len(calendar.Components) != 1 {
-		t.Errorf("Calendar should have only 1 entry after deduplication but has %d", len(calendar.Components))
+	if len(calendar.Components) != 2 {
+		t.Errorf("Calendar should have only 2 entry after deduplication but has %d", len(calendar.Components))
 		return
 	}
 }
 
 func TestNameShortening(t *testing.T) {
 	testData, app := getTestData(t, "nameshortening.ics")
-	calendar, err := app.getCleanedCalendar([]byte(testData), []string{}, map[int]int{}, map[int]int{})
+	calendar, err := app.getCleanedCalendar([]byte(testData), []string{})
 	if err != nil {
 		t.Error(err)
 		return
@@ -87,7 +89,7 @@ func TestNameShortening(t *testing.T) {
 
 func TestLocationReplacement(t *testing.T) {
 	testData, app := getTestData(t, "location.ics")
-	calendar, err := app.getCleanedCalendar([]byte(testData), []string{}, map[int]int{}, map[int]int{})
+	calendar, err := app.getCleanedCalendar([]byte(testData), []string{})
 	if err != nil {
 		t.Error(err)
 		return
@@ -110,7 +112,7 @@ func TestCourseFiltering(t *testing.T) {
 	testData, app := getTestData(t, "coursefiltering.ics")
 
 	// make sure the unfiltered calendar has 2 entries
-	fullCalendar, err := app.getCleanedCalendar([]byte(testData), []string{}, map[int]int{}, map[int]int{})
+	fullCalendar, err := app.getCleanedCalendar([]byte(testData), []string{})
 	if err != nil {
 		t.Error(err)
 		return
@@ -121,8 +123,8 @@ func TestCourseFiltering(t *testing.T) {
 	}
 
 	// now filter out one course
-    filter := "Einführung in die Rechnerarchitektur (IN0004) VO\\, Standardgruppe"
-	filteredCalendar, err := app.getCleanedCalendar([]byte(testData), []string{filter}, map[int]int{}, map[int]int{})
+	filter := "Einführung in die Rechnerarchitektur (IN0004) VO\\, Standardgruppe"
+	filteredCalendar, err := app.getCleanedCalendar([]byte(testData), []string{filter})
 	if err != nil {
 		t.Error(err)
 		return
@@ -140,65 +142,15 @@ func TestCourseFiltering(t *testing.T) {
 	}
 }
 
-func TestCourseTimeAdjustment(t *testing.T) {
-	testData, app := getTestData(t, "timeadjustment.ics")
-
-    startOffsets := map[int]int {
-      583745: 15,
-    }
-
-    endOffsets := map[int]int {
-      583745: 0,
-      583744: -14,
-    }
-
-	adjCal, err := app.getCleanedCalendar([]byte(testData), []string{}, startOffsets, endOffsets)
+func TestGetCourses(t *testing.T) {
+	testData, app := getTestData(t, "duplication.ics")
+	courses, err := app.getCourses(bytes.NewReader([]byte(testData)))
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	if len(adjCal.Components) != 4 {
-		t.Errorf("Calendar should have 4 entries before time adjustment but was %d", len(adjCal.Components))
-		return
-	}
-
-    // first entry (recurring id 583745): only start offset expected (+15)
-    if start := adjCal.Components[0].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtstart)).Value; start != "20240109T171500Z" {
-		t.Errorf("start (+15) should have been 20240109T171500Z but was %s", start)
-		return
-	}
-    if end := adjCal.Components[0].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtend)).Value; end != "20240109T190000Z" {
-		t.Errorf("end (+0) should have been 20240109T190000Z but was %s", end)
-		return
-	}
-
-    // second entry (recurring id 583744): only end offset expected (-14)
-    if start := adjCal.Components[1].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtstart)).Value; start != "20231113T170000Z" {
-		t.Errorf("start (+/- n.a.) should have been 20231113T170000Z but was %s", start)
-		return
-	}
-    if end := adjCal.Components[1].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtend)).Value; end != "20231113T184600Z" {
-		t.Errorf("end (-14) should have been 20231113T184600Z but was %s", end)
-		return
-	}
-
-    // third entry (no recurring id): expect no adjustments
-    if start := adjCal.Components[2].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtstart)).Value; start != "20231023T160000Z" {
-		t.Errorf("start (+/- n.a.) should have been 20231023T160000Z but was %s", start)
-		return
-	}
-    if end := adjCal.Components[2].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtend)).Value; end != "20231023T180000Z" {
-		t.Errorf("end (+/- n.a.) should have been 20231023T180000Z but was %s", end)
-		return
-	}
-
-    // fourth entry (recurring id 583745): expect only start offset expected (+15)
-    if start := adjCal.Components[3].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtstart)).Value; start != "20240206T171500Z" {
-		t.Errorf("start (+/- n.a.) should have been 20240206T171500Z but was %s", start)
-		return
-	}
-    if end := adjCal.Components[3].(*ics.VEvent).GetProperty(ics.ComponentProperty(ics.PropertyDtend)).Value; end != "20240206T190000Z" {
-		t.Errorf("end (+/- n.a.) should have been 20240206T190000Z but was %s", end)
-		return
+	should := []string{"Einführung in die Rechnerarchitektur (IN0004) VO\\, Standardgruppe", "Practical Course: Open Source Lab (IN0012\\, IN2106\\, IN4308) PR\\, Standardgruppe"}
+	if !slices.Equal(courses, should) {
+		t.Errorf("get courses failed, expected: %v, got %v", should, courses)
 	}
 }
