@@ -3,8 +3,10 @@ package internal
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -186,57 +188,58 @@ func getUrl(c *gin.Context) string {
 	return fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token)
 }
 
-func (a *App) handleIcal(c *gin.Context) {
-	fetchURL := getUrl(c)
+func getCalendar(ctx *gin.Context) ([]byte, error) {
+	fetchURL := getUrl(ctx)
 	if fetchURL == "" {
-		return
+		return nil, errors.New("no fetchable URL passed")
 	}
 	resp, err := http.Get(fetchURL)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
-		return
+		return nil, fmt.Errorf("can't fetch calendar: %w", err)
 	}
 	all, err := io.ReadAll(resp.Body)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return nil, fmt.Errorf("can't read calendar: %w", err)
+	}
+	return all, nil
+}
+
+// handleIcal returns a filtered calendar with all courses that are currently offered on campus.
+func (a *App) handleIcal(ctx *gin.Context) {
+	allEvents, err := getCalendar(ctx)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
-	hide := c.QueryArray("hide")
+	hide := ctx.QueryArray("hide")
 
-	cleaned, err := a.getCleanedCalendar(all, hide)
+	cleaned, err := a.getCleanedCalendar(allEvents, hide)
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
 	response := []byte(cleaned.Serialize())
-	c.Header("Content-Type", "text/calendar")
-	c.Header("Content-Length", fmt.Sprintf("%d", len(response)))
+	ctx.Header("Content-Type", "text/calendar")
+	ctx.Header("Content-Length", fmt.Sprintf("%d", len(response)))
 
-	if _, err := c.Writer.Write(response); err != nil {
+	if _, err := ctx.Writer.Write(response); err != nil {
 		sentry.CaptureException(err)
 	}
 }
 
-func (a *App) handleGetCourses(c *gin.Context) {
-	fetchURL := getUrl(c)
-	if fetchURL == "" {
-		return
-	}
-	resp, err := http.Get(fetchURL)
+// handleGetCourses returns a list of all courses that are currently offered on campus.
+// This is used to populate the dropdown in the landing page for hiding courses.
+func (a *App) handleGetCourses(ctx *gin.Context) {
+	allEvents, err := getCalendar(ctx)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
-		return
-	}
-	all, err := io.ReadAll(resp.Body)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
 
-	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
+	cal, err := a.getCleanedCalendar(allEvents, []string{})
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
@@ -254,6 +257,7 @@ func (a *App) handleGetCourses(c *gin.Context) {
 					Hide:    false,
 				}
 			}
+			log.Printf("summaries: %s", eventSummary)
 			courses[eventSummary] = course
 
 		default:
@@ -261,16 +265,7 @@ func (a *App) handleGetCourses(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, courses)
-}
-
-func stringEqualsOneOf(target string, listOfStrings []string) bool {
-	for _, element := range listOfStrings {
-		if target == element {
-			return true
-		}
-	}
-	return false
+	ctx.JSON(http.StatusOK, courses)
 }
 
 func (a *App) getCleanedCalendar(
@@ -280,6 +275,12 @@ func (a *App) getCleanedCalendar(
 	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
 	if err != nil {
 		return nil, err
+	}
+
+	// Create map of all hidden courses
+	hiddenCourses := make(map[string]bool)
+	for _, course := range hide {
+		hiddenCourses[course] = true
 	}
 
 	// Create map that tracks if we have already seen a lecture name & datetime (e.g. "lecturexyz-1.2.2024 10:00" -> true)
@@ -293,8 +294,7 @@ func (a *App) getCleanedCalendar(
 
 			// check if the summary contains any of the hidden keys, and if yes, skip it
 			eventSummary := event.GetProperty(ics.ComponentPropertySummary).Value
-			shouldHideEvent := stringEqualsOneOf(eventSummary, hide)
-			if shouldHideEvent {
+			if hiddenCourses[eventSummary] {
 				continue
 			}
 
@@ -324,7 +324,7 @@ var reLoc = regexp.MustCompile(" ?(München|Garching|Weihenstephan).+")
 // Matches repeated whitespaces
 var reSpace = regexp.MustCompile(`\s\s+`)
 
-// Matches weird starting numbers like "0000002467 " in "0000002467 Semantik"
+// Matches unique starting numbers like "0000002467 " in "0000002467 Semantik"
 var reWeirdStartingNumbers = regexp.MustCompile(`^0\d+ `)
 
 var unneeded = []string{
@@ -363,7 +363,7 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 
 	//Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
 	summary = reTag.ReplaceAllString(summary, "")
-	//remove location and teacher from language course title
+	//remove location and teacher from the language course title
 	summary = reLoc.ReplaceAllString(summary, "")
 	summary = reSpace.ReplaceAllString(summary, "")
 	for _, replace := range unneeded {
