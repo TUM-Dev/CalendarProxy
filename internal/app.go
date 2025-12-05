@@ -350,12 +350,12 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 
 	description := ""
 	if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
-		description = strings.ReplaceAll(d.Value, "\\", "")
+		description = d.Value
 	}
 
 	location := ""
 	if l := event.GetProperty(ics.ComponentPropertyLocation); l != nil {
-		location = strings.ReplaceAll(event.GetProperty(ics.ComponentPropertyLocation).Value, "\\", "")
+		location = event.GetProperty(ics.ComponentPropertyLocation).Value
 	}
 
 	// Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
@@ -404,7 +404,6 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 }
 
 func cleanEventSummary(eventSummary string) string {
-	eventSummary = strings.ReplaceAll(eventSummary, "\\", "")
 	eventSummary = strings.TrimSpace(eventSummary)
 	eventSummary = strings.TrimSuffix(eventSummary, " ,")
 	return eventSummary
