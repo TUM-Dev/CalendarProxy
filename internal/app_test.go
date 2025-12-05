@@ -1,10 +1,12 @@
 package internal
 
 import (
-	ics "github.com/arran4/golang-ical"
 	"io"
 	"os"
+	"strings"
 	"testing"
+
+	ics "github.com/arran4/golang-ical"
 )
 
 func getTestData(t *testing.T, name string) (string, *App) {
@@ -58,7 +60,7 @@ func TestReplacement(t *testing.T) {
 
 func TestDeduplication(t *testing.T) {
 	testData, app := getTestData(t, "duplication.ics")
-	calendar, err := app.getCleanedCalendar([]byte(testData))
+	calendar, err := app.getCleanedCalendar([]byte(testData), map[string]bool{})
 	if err != nil {
 		t.Error(err)
 		return
@@ -71,7 +73,7 @@ func TestDeduplication(t *testing.T) {
 
 func TestNameShortening(t *testing.T) {
 	testData, app := getTestData(t, "nameshortening.ics")
-	calendar, err := app.getCleanedCalendar([]byte(testData))
+	calendar, err := app.getCleanedCalendar([]byte(testData), map[string]bool{})
 	if err != nil {
 		t.Error(err)
 		return
@@ -85,7 +87,7 @@ func TestNameShortening(t *testing.T) {
 
 func TestLocationReplacement(t *testing.T) {
 	testData, app := getTestData(t, "location.ics")
-	calendar, err := app.getCleanedCalendar([]byte(testData))
+	calendar, err := app.getCleanedCalendar([]byte(testData), map[string]bool{})
 	if err != nil {
 		t.Error(err)
 		return
@@ -100,6 +102,40 @@ func TestLocationReplacement(t *testing.T) {
 	expectedDescription := "https://nav.tum.de/room/5508.02.801\\nMW 1801\\, Ernst-Schmidt-Hörsaal (5508.02.801)\\nEinführung in die Rechnerarchitektur\\nfix\\; Abhaltung\\;"
 	if desc != expectedDescription {
 		t.Errorf("Description should be %s but is %s", expectedDescription, desc)
+		return
+	}
+}
+
+func TestCourseFiltering(t *testing.T) {
+	testData, app := getTestData(t, "coursefiltering.ics")
+
+	// make sure the unfiltered calendar has 2 entries
+	fullCalendar, err := app.getCleanedCalendar([]byte(testData), map[string]bool{})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if len(fullCalendar.Components) != 2 {
+		t.Errorf("Calendar should have 2 entries before course filtering but has %d", len(fullCalendar.Components))
+		return
+	}
+
+	// now filter out one course
+	filter := "Einführung in die Rechnerarchitektur (IN0004) VO\\, Standardgruppe"
+	filteredCalendar, err := app.getCleanedCalendar([]byte(testData), map[string]bool{filter: true})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if len(filteredCalendar.Components) != 1 {
+		t.Errorf("Calendar should have only 1 entry after course filtering but has %d", len(filteredCalendar.Components))
+		return
+	}
+
+	// make sure the summary does not contain the filtered course's name
+	summary := filteredCalendar.Components[0].(*ics.VEvent).GetProperty(ics.ComponentPropertySummary).Value
+	if strings.Contains(summary, filter) {
+		t.Errorf("Summary should not contain %s but is %s", filter, summary)
 		return
 	}
 }
