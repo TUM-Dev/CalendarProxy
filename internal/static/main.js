@@ -75,7 +75,7 @@ function reloadCourses() {
                 const input = document.createElement("input");
                 input.type = "checkbox";
                 input.id = course.summary;
-                input.checked = !hiddenCourses.has(key);
+                input.checked = !course.hide;
                 input.onchange = () => {
                     if (input.checked) {
                       hiddenCourses.delete(key);
