@@ -318,15 +318,18 @@ func (a *App) getCleanedCalendar(all []byte, hiddenCourses map[string]bool) (*ic
 			}
 			hasLecture[dedupKey] = true // mark event as seen
 
-			// Get additional locations from duplicated events (skip the first one which is this event's location)
+			// Get additional locations from duplicated events (skip the current event's location and duplicates)
 			var additionalLocations []string
 			if locations := eventLocations[dedupKey]; len(locations) > 1 {
 				currentLocation := ""
 				if l := event.GetProperty(ics.ComponentPropertyLocation); l != nil {
 					currentLocation = l.Value
 				}
+				seen := make(map[string]bool)
+				seen[currentLocation] = true
 				for _, loc := range locations {
-					if loc != currentLocation {
+					if !seen[loc] {
+						seen[loc] = true
 						additionalLocations = append(additionalLocations, loc)
 					}
 				}
