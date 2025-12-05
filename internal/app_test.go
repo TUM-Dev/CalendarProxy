@@ -82,6 +82,60 @@ func TestDeduplication(t *testing.T) {
 	}
 }
 
+func TestMultipleRooms(t *testing.T) {
+	// Setup app with building replacements
+	app, err := newApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a dummy event with multiple rooms
+	event := ics.NewEvent("test-uid")
+
+	// Using 5508 and 5612 which are present in buildings.json
+	// 5508 -> Boltzmannstr. 15, 85748 Garching b. München
+	// 5612 -> Boltzmannstr. 3, 85748 Garching b. München
+
+	// Construct a location string with multiple rooms.
+	// RoomA, DescA (5508.01.001), RoomB, DescB (5612.01.001)
+
+	location := "RoomA, DescA (5508.01.001), RoomB, DescB (5612.01.001)"
+	event.SetProperty(ics.ComponentPropertyLocation, location)
+	event.SetProperty(ics.ComponentPropertySummary, "Test Event")
+	event.SetProperty(ics.ComponentPropertyDescription, "Original Description")
+	event.SetProperty(ics.ComponentPropertyStatus, "CONFIRMED")
+
+	app.cleanEvent(event)
+
+	desc := event.GetProperty(ics.ComponentPropertyDescription).Value
+	loc := event.GetProperty(ics.ComponentPropertyLocation).Value
+
+	// Check if both rooms are present in description or nav links
+	if !strings.Contains(desc, "5508.01.001") {
+		t.Errorf("Description should contain first room ID")
+	}
+	if !strings.Contains(desc, "5612.01.001") {
+		t.Errorf("Description should contain second room ID")
+	}
+
+	// Check if nav links are generated for both
+	// 5508.01.001 -> https://nav.tum.de/room/5508.01.001
+	// 5612.01.001 -> https://nav.tum.de/room/5612.01.001
+
+	if !strings.Contains(desc, "https://nav.tum.de/room/5508.01.001") {
+		t.Error("Missing nav link for first room")
+	}
+	if !strings.Contains(desc, "https://nav.tum.de/room/5612.01.001") {
+		t.Error("Missing nav link for second room")
+	}
+
+	// With non-greedy regex, the location should be the first building (5508)
+	expectedLoc := "Boltzmannstr. 15, 85748 Garching b. München"
+	if loc != expectedLoc {
+		t.Errorf("Location should be %s but is %s", expectedLoc, loc)
+	}
+}
+
 func TestNameShortening(t *testing.T) {
 	testData, app := getTestData(t, "nameshortening.ics")
 	calendar, err := app.getCleanedCalendar([]byte(testData), map[string]bool{})

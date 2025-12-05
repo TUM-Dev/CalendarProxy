@@ -372,7 +372,7 @@ var unneeded = []string{
 	"(Online)",
 }
 
-var reRoom = regexp.MustCompile("^(.*?),.*(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\\d)\\.\\d+")
+var reRoom = regexp.MustCompile("^(.*?),.*?(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\\d)\\.\\d+")
 
 // matches strings like: (5612.03.017), (5612.EG.017), (5612.EG.010B)
 var reNavigaTUM = regexp.MustCompile("\\(\\d{4}\\.[a-zA-Z0-9]{2}\\.\\d{3}[A-Z]?\\)")
@@ -416,9 +416,11 @@ func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
 			description = location + "\n" + description
 			event.SetLocation(building)
 		}
-		if roomID := reNavigaTUM.FindString(location); roomID != "" {
-			roomID = strings.Trim(roomID, "()")
-			description = fmt.Sprintf("https://nav.tum.de/room/%s\n%s", roomID, description)
+		if roomIDs := reNavigaTUM.FindAllString(location, -1); len(roomIDs) > 0 {
+			for _, roomID := range roomIDs {
+				roomID = strings.Trim(roomID, "()")
+				description = fmt.Sprintf("https://nav.tum.de/room/%s\n%s", roomID, description)
+			}
 		}
 	}
 
