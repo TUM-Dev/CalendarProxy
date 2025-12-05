@@ -1,6 +1,4 @@
 const hiddenCourses = new Set();
-const startOffsetRecurrences = new Map();
-const endOffsetRecurrences = new Map();
 let originalLink = null;
 
 function getAndCheckCalLink() {
@@ -37,16 +35,6 @@ function generateLink() {
     const queryParams = new URLSearchParams(adjustedLink.search);
     for (const courseName of hiddenCourses) {
           queryParams.append("hide", courseName);
-    }
-
-    for (const [id, offset] of startOffsetRecurrences.entries()) {
-          if (offset == 0) continue;
-          queryParams.append("startOffset", id.toString() + (offset > 0 ? "+" : " ") + offset.toString());
-    }
-
-    for (const [id, offset] of endOffsetRecurrences.entries()) {
-          if (offset == 0) continue;
-          queryParams.append("endOffset", id.toString() + (offset > 0 ? "+" : "") + offset.toString());
     }
 
     adjustedLink.search = queryParams;
@@ -107,35 +95,8 @@ function reloadCourses() {
                   const endDate = new Date(recurrence.dtEnd);
                   const dayOfWeek = new Intl.DateTimeFormat("de-DE", {weekday: "long"}).format(startDate);
 
-                  const startOffsetInput = document.createElement("input");
-                  startOffsetInput.type = "number";
-                  startOffsetInput.classList.add("offset");
-                  startOffsetInput.inputmode = "numeric";
-                  startOffsetInput.pattern = "\d*";
-                  startOffsetInput.value = recurrence.startOffsetMinutes || 0;
-                  startOffsetInput.onchange = () => {
-                      startOffsetRecurrences.set(recurrence.recurringId, Number(startOffsetInput.value));
-                      setCopyButton("reset");
-                  };
-
-                  const endOffsetInput = document.createElement("input");
-                  endOffsetInput.type = "number";
-                  endOffsetInput.classList.add("offset");
-                  endOffsetInput.inputmode = "numeric";
-                  endOffsetInput.pattern = "\d*";
-                  endOffsetInput.value = recurrence.endOffsetMinutes || 0;
-                  endOffsetInput.onchange = () => {
-                      endOffsetRecurrences.set(recurrence.recurringId, Number(endOffsetInput.value));
-                      setCopyButton("reset");
-                  };
-
-
                   recLi.appendChild(document.createTextNode(`id ${recurrence.recurringId}: `));
-                  recLi.appendChild(document.createTextNode(`start (+/-)`));
-                  recLi.appendChild(startOffsetInput);
                   recLi.appendChild(document.createTextNode(` ${dayOfWeek}: ${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()} `));
-                  recLi.appendChild(document.createTextNode(`end (+/-)`));
-                  recLi.appendChild(endOffsetInput);
                   recurrences.appendChild(recLi);
                 }
                 li.appendChild(input);
