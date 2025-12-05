@@ -3,12 +3,14 @@ package internal
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
