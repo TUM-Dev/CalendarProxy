@@ -3,16 +3,13 @@ package internal
 import (
 	"embed"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
-	"time"
 
 	ics "github.com/arran4/golang-ical"
 	"github.com/getsentry/sentry-go"
@@ -44,18 +41,9 @@ type Replacement struct {
 	value string
 }
 
-type Event struct {
-	RecurringId        string    `json:"recurringId"`
-	DtStart            time.Time `json:"dtStart"`
-	DtEnd              time.Time `json:"dtEnd"`
-	StartOffsetMinutes int       `json:"startOffsetMinutes"`
-	EndOffsetMinutes   int       `json:"endOffsetMinutes"`
-}
-
 type Course struct {
-	Summary     string           `json:"summary"`
-	Hide        bool             `json:"hide"`
-	Recurrences map[string]Event `json:"recurrences"`
+	Summary string `json:"summary"`
+	Hide    bool   `json:"hide"`
 }
 
 // for sorting replacements by length, then alphabetically
@@ -198,38 +186,6 @@ func getUrl(c *gin.Context) string {
 	return fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token)
 }
 
-func parseOffsetsQuery(values []string) (map[int]int, error) {
-	offsets := make(map[int]int)
-
-	for _, value := range values {
-		parts := strings.Split(value, "+")
-		positive := true
-		if len(parts) != 2 {
-			parts = strings.Split(value, "-")
-			positive = false
-			if len(parts) != 2 {
-				return offsets, errors.New("OffsetsQuery was malformed")
-			}
-		}
-
-		id, err := strconv.Atoi(strings.TrimSpace(parts[0]))
-		if err != nil {
-			return offsets, err
-		}
-		offset, err := strconv.Atoi(strings.TrimSpace(parts[1]))
-		if err != nil {
-			return offsets, err
-		}
-
-		if !positive {
-			offset = -1 * offset
-		}
-
-		offsets[id] = offset
-	}
-	return offsets, nil
-}
-
 func (a *App) handleIcal(c *gin.Context) {
 	fetchURL := getUrl(c)
 	if fetchURL == "" {
@@ -290,33 +246,13 @@ func (a *App) handleGetCourses(c *gin.Context) {
 		switch component.(type) {
 		case *ics.VEvent:
 			vEvent := component.(*ics.VEvent)
-			event := Event{
-				RecurringId:        vEvent.GetProperty("X-CO-RECURRINGID").Value,
-				StartOffsetMinutes: 0,
-				EndOffsetMinutes:   0,
-			}
-
-			if event.DtStart, err = vEvent.GetStartAt(); err != nil {
-				continue
-			}
-			if event.DtEnd, err = vEvent.GetEndAt(); err != nil {
-				continue
-			}
-
 			eventSummary := vEvent.GetProperty(ics.ComponentPropertySummary).Value
 			course, exists := courses[eventSummary]
-
 			if !exists {
 				course = Course{
-					Summary:     eventSummary,
-					Hide:        false,
-					Recurrences: map[string]Event{},
+					Summary: eventSummary,
+					Hide:    false,
 				}
-			}
-
-			// only add recurring events
-			if event.RecurringId != "" {
-				course.Recurrences[event.RecurringId] = event
 			}
 			courses[eventSummary] = course
 
@@ -346,7 +282,7 @@ func (a *App) getCleanedCalendar(
 		return nil, err
 	}
 
-	// Create map that tracks if we have allready seen a lecture name & datetime (e.g. "lecturexyz-1.2.2024 10:00" -> true)
+	// Create map that tracks if we have already seen a lecture name & datetime (e.g. "lecturexyz-1.2.2024 10:00" -> true)
 	hasLecture := make(map[string]bool)
 	var newComponents []ics.Component // saves the components we keep because they are not duplicated
 
