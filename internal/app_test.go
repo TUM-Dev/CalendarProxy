@@ -105,7 +105,7 @@ func TestMultipleRooms(t *testing.T) {
 	event.SetProperty(ics.ComponentPropertyDescription, "Original Description")
 	event.SetProperty(ics.ComponentPropertyStatus, "CONFIRMED")
 
-	app.cleanEvent(event)
+	app.cleanEvent(event, []string{})
 
 	desc := event.GetProperty(ics.ComponentPropertyDescription).Value
 	loc := event.GetProperty(ics.ComponentPropertyLocation).Value
