@@ -9,7 +9,7 @@ function getAndCheckCalLink() {
         value = originalLink;
     }
     if (!value.match(/https:\/\/campus\.tum\.de\/tumonlinej\/.{2}\/termin\/ical\?(pStud|pPers)=[0-9,A-Z]*&pToken=[0-9,A-Z]*/i)
-        && !value.match(/https:\/\/cal\.tum\.app\/\?(pStud|pPers)=[0-9,A-Z]*&pToken=[0-9,A-Z]*/i)) {
+        && !value.match(/https:\/\/cal\.tum\.(app|sexy)\/\?(pStud|pPers)=[0-9,A-Z]*&pToken=[0-9,A-Z]*/i)) {
         input.setAttribute("class", "invalid")
         return undefined;
     }
