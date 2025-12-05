@@ -231,11 +231,11 @@ func parseOffsetsQuery(values []string) (map[int]int, error) {
 }
 
 func (a *App) handleIcal(c *gin.Context) {
-	url := getUrl(c)
-	if url == "" {
+	fetchURL := getUrl(c)
+	if fetchURL == "" {
 		return
 	}
-	resp, err := http.Get(url)
+	resp, err := http.Get(fetchURL)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
@@ -263,11 +263,11 @@ func (a *App) handleIcal(c *gin.Context) {
 }
 
 func (a *App) handleGetCourses(c *gin.Context) {
-	url := getUrl(c)
-	if url == "" {
+	fetchURL := getUrl(c)
+	if fetchURL == "" {
 		return
 	}
-	resp, err := http.Get(url)
+	resp, err := http.Get(fetchURL)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
