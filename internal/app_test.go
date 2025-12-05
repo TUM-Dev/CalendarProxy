@@ -69,6 +69,17 @@ func TestDeduplication(t *testing.T) {
 		t.Errorf("Calendar should have only 1 entry after deduplication but has %d", len(calendar.Components))
 		return
 	}
+
+	// Verify that the additional room from the deduplicated event is in the description
+	desc := calendar.Components[0].(*ics.VEvent).GetProperty(ics.ComponentPropertyDescription).Value
+	if !strings.Contains(desc, "Additional rooms:") {
+		t.Error("Description should contain 'Additional rooms:' when events are deduplicated with different locations")
+		return
+	}
+	if !strings.Contains(desc, "MI HS 1") {
+		t.Error("Description should contain the additional room 'MI HS 1' from the deduplicated event")
+		return
+	}
 }
 
 func TestNameShortening(t *testing.T) {
@@ -99,7 +110,7 @@ func TestLocationReplacement(t *testing.T) {
 		return
 	}
 	desc := calendar.Components[0].(*ics.VEvent).GetProperty(ics.ComponentPropertyDescription).Value
-	expectedDescription := "https://nav.tum.de/room/5508.02.801\nMW 1801, Ernst-Schmidt-Hörsaal (5508.02.801)\nEinführung in die Rechnerarchitektur\nfix; Abhaltung;"
+	expectedDescription := "Additional rooms:\nMI HS 1\n\nhttps://nav.tum.de/room/5508.02.801\nMW 1801, Ernst-Schmidt-Hörsaal (5508.02.801)\nEinführung in die Rechnerarchitektur\nfix; Abhaltung;"
 	if desc != expectedDescription {
 		t.Errorf("Description should be %s but is %s", expectedDescription, desc)
 		return
