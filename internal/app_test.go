@@ -202,3 +202,62 @@ func TestCourseTimeAdjustment(t *testing.T) {
 		return
 	}
 }
+func TestParseOffsetsQuery(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   []string
+		want    map[int]int
+		wantErr bool
+	}{
+		{
+			name:  "valid positive",
+			input: []string{"123+10"},
+			want:  map[int]int{123: 10},
+		},
+		{
+			name:  "valid negative",
+			input: []string{"123-10"},
+			want:  map[int]int{123: -10},
+		},
+		{
+			name:  "broken space format (fixed via trim)",
+			input: []string{"123 -10"},
+			want:  map[int]int{123: -10},
+		},
+        {
+			name:  "malformed",
+			input: []string{"123"},
+			wantErr: true,
+		},
+        {
+			name:  "non-int id",
+			input: []string{"abc+10"},
+			wantErr: true,
+		},
+        {
+			name:  "non-int offset",
+			input: []string{"123+abc"},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseOffsetsQuery(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseOffsetsQuery() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				if len(got) != len(tt.want) {
+					t.Errorf("parseOffsetsQuery() got %v, want %v", got, tt.want)
+				}
+				for k, v := range tt.want {
+					if got[k] != v {
+						t.Errorf("parseOffsetsQuery() got[%d] = %d, want %d", k, got[k], v)
+					}
+				}
+			}
+		})
+	}
+}
