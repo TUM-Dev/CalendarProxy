@@ -37,6 +37,16 @@ function generateLink() {
           queryParams.append("hide", courseName);
     }
 
+    for (const [id, offset] of startOffsetRecurrences.entries()) {
+          if (offset == 0) continue;
+          queryParams.append("startOffset", id.toString() + (offset > 0 ? "+" : "") + offset.toString());
+    }
+
+    for (const [id, offset] of endOffsetRecurrences.entries()) {
+          if (offset == 0) continue;
+          queryParams.append("endOffset", id.toString() + (offset > 0 ? "+" : "") + offset.toString());
+    }
+
     adjustedLink.search = queryParams;
     copyToClipboard(adjustedLink.toString());
     setCopyButton("copied");

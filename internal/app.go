@@ -196,6 +196,37 @@ func getUrl(c *gin.Context) string {
 	return fmt.Sprintf("https://campus.tum.de/tumonlinej/ws/termin/ical?pStud=%s&pToken=%s", stud, token)
 }
 
+func parseOffsetsQuery(values []string) (map[int]int, error) {
+	offsets := make(map[int]int)
+
+	for _, value := range values {
+		parts := strings.Split(value, "+")
+		positive := true
+		if len(parts) != 2 {
+			parts = strings.Split(value, "-")
+			positive = false
+			if len(parts) != 2 {
+				return offsets, errors.New("OffsetsQuery was malformed")
+			}
+		}
+
+		id, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+		if err != nil {
+			return offsets, err
+		}
+		offset, err := strconv.Atoi(strings.TrimSpace(parts[1]))
+		if err != nil {
+			return offsets, err
+		}
+
+		if !positive {
+			offset = -1 * offset
+		}
+
+		offsets[id] = offset
+	}
+	return offsets, nil
+}
 
 func (a *App) handleIcal(c *gin.Context) {
 	url := getUrl(c)
