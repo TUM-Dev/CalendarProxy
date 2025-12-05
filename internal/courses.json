@@ -80,15 +80,15 @@
   "Technische Mechanik I": "TM 1",
   "Technische Mechanik II": "TM 2",
   "Technische Mechanik": "TM",
-  "Technische Elektrizitätslehre": "TE",
+  "Technischen Elektrizitätslehre": "TE",
   "Regelungstechnik": "RT",
   "Fluidmechanik I": "FM 1",
   "Fluidmechanik": "FM",
   "Maschinenelemente": "ME",
-  "Werkstoffe des Maschinenbaus": "WK",
-  "Höhere Mathematik 1 für Maschinenwesen und Chemie-Ingenieurwesen": "HM1",
-  "Höheren Mathematik 2 für Maschinenwesen und Chemie-Ingenieurwesen": "HM2",
-  "Höheren Mathematik 3 für Maschinenwesen und Chemie-Ingenieurwesen": "HM3",
+  "Werkstoffkunde": "WK",
+  "Mathematik 1 für": "M1",
+  "Mathematik 2 für": "M2",
+  "Mathematik 3 für": "M3",
   "Technische Thermodynamik": "TTD",
   "Automatisierungstechnik 1": "AT",
   "Einführung in die Werkstoffe und Fertigungstechnologien von Carbon Composites": "CC",
@@ -113,5 +113,6 @@
   "IT und Unternehmensberatung": "ITUB",
   "Data Analytics in Applications ": "DAiA",
   "Strategisches IT-Management": "Strat. IT Mgmt.",
-  "Fundamentals of Artificial Intelligence": "Fund. of AI"
+  "Fundamentals of Artificial Intelligence": "Fund. of AI",
+  "Skizzier- und Darstellungstechniken": "SKDT"
 }
