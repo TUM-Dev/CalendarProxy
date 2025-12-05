@@ -3,14 +3,12 @@ package internal
 import (
 	"embed"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -246,18 +244,8 @@ func (a *App) handleIcal(c *gin.Context) {
 		return
 	}
 	hide := c.QueryArray("hide")
-	startOffsets, err := parseOffsetsQuery(c.QueryArray("startOffset"))
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-	endOffsets, err := parseOffsetsQuery(c.QueryArray("endOffset"))
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
 
-	cleaned, err := a.getCleanedCalendar(all, hide, startOffsets, endOffsets)
+	cleaned, err := a.getCleanedCalendar(all, hide)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -350,8 +338,6 @@ func stringEqualsOneOf(target string, listOfStrings []string) bool {
 func (a *App) getCleanedCalendar(
 	all []byte,
 	hide []string,
-	startOffsets map[int]int,
-	endOffsets map[int]int,
 ) (*ics.Calendar, error) {
 	cal, err := ics.ParseCalendar(strings.NewReader(string(all)))
 	if err != nil {
@@ -380,9 +366,6 @@ func (a *App) getCleanedCalendar(
 			}
 			hasLecture[dedupKey] = true // mark event as seen
 
-			if recurringId, err := strconv.Atoi(event.GetProperty("X-CO-RECURRINGID").Value); err == nil {
-				a.adjustEventTimes(event, startOffsets[recurringId], endOffsets[recurringId])
-			}
 			a.cleanEvent(event)
 			newComponents = append(newComponents, event)
 		default: // keep everything that is not an event (metadata etc.)
@@ -423,28 +406,6 @@ var reRoom = regexp.MustCompile("^(.*?),.*(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\\
 
 // matches strings like: (5612.03.017), (5612.EG.017), (5612.EG.010B)
 var reNavigaTUM = regexp.MustCompile("\\(\\d{4}\\.[a-zA-Z0-9]{2}\\.\\d{3}[A-Z]?\\)")
-
-func (a *App) adjustEventTimes(event *ics.VEvent, startOffset int, endOffset int) {
-	if startOffset != 0 {
-		if start, err := event.GetStartAt(); err == nil {
-			start = start.Add(time.Minute * time.Duration(startOffset))
-			event.SetStartAt(start)
-
-			if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
-				event.SetDescription(d.Value + fmt.Sprintf("; start offset: %d", startOffset))
-			}
-		}
-	}
-	if endOffset != 0 {
-		if end, err := event.GetEndAt(); err == nil {
-			end = end.Add(time.Minute * time.Duration(endOffset))
-			event.SetEndAt(end)
-			if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
-				event.SetDescription(d.Value + fmt.Sprintf("; end offset: %dm", endOffset))
-			}
-		}
-	}
-}
 
 func (a *App) cleanEvent(event *ics.VEvent) {
 	summary := ""

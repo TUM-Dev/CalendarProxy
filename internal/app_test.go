@@ -60,7 +60,7 @@ func TestReplacement(t *testing.T) {
 
 func TestDeduplication(t *testing.T) {
 	testData, app := getTestData(t, "duplication.ics")
-	calendar, err := app.getCleanedCalendar([]byte(testData), []string{}, map[int]int{}, map[int]int{})
+	calendar, err := app.getCleanedCalendar([]byte(testData), []string{})
 	if err != nil {
 		t.Error(err)
 		return
@@ -73,7 +73,7 @@ func TestDeduplication(t *testing.T) {
 
 func TestNameShortening(t *testing.T) {
 	testData, app := getTestData(t, "nameshortening.ics")
-	calendar, err := app.getCleanedCalendar([]byte(testData), []string{}, map[int]int{}, map[int]int{})
+	calendar, err := app.getCleanedCalendar([]byte(testData), []string{})
 	if err != nil {
 		t.Error(err)
 		return
@@ -87,7 +87,7 @@ func TestNameShortening(t *testing.T) {
 
 func TestLocationReplacement(t *testing.T) {
 	testData, app := getTestData(t, "location.ics")
-	calendar, err := app.getCleanedCalendar([]byte(testData), []string{}, map[int]int{}, map[int]int{})
+	calendar, err := app.getCleanedCalendar([]byte(testData), []string{})
 	if err != nil {
 		t.Error(err)
 		return
@@ -110,7 +110,7 @@ func TestCourseFiltering(t *testing.T) {
 	testData, app := getTestData(t, "coursefiltering.ics")
 
 	// make sure the unfiltered calendar has 2 entries
-	fullCalendar, err := app.getCleanedCalendar([]byte(testData), []string{}, map[int]int{}, map[int]int{})
+	fullCalendar, err := app.getCleanedCalendar([]byte(testData), []string{})
 	if err != nil {
 		t.Error(err)
 		return
@@ -122,7 +122,7 @@ func TestCourseFiltering(t *testing.T) {
 
 	// now filter out one course
     filter := "Einführung in die Rechnerarchitektur (IN0004) VO\\, Standardgruppe"
-	filteredCalendar, err := app.getCleanedCalendar([]byte(testData), []string{filter}, map[int]int{}, map[int]int{})
+	filteredCalendar, err := app.getCleanedCalendar([]byte(testData), []string{filter})
 	if err != nil {
 		t.Error(err)
 		return
