@@ -296,7 +296,7 @@ func (a *App) getCleanedCalendar(all []byte, hiddenCourses map[string]bool) (*ic
 		}
 	}
 
-	// Second pass: deduplicate and clean events, adding additional rooms to description
+	// Second pass: deduplicate and clean events, adding additional rooms to the description
 	hasLecture := make(map[string]bool)
 	var newComponents []ics.Component // saves the components we keep because they are not duplicated
 
@@ -378,20 +378,12 @@ var reRoom = regexp.MustCompile("^(.*?),.*?(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\
 var reNavigaTUM = regexp.MustCompile("\\(\\d{4}\\.[a-zA-Z0-9]{2}\\.\\d{3}[A-Z]?\\)")
 
 func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
+	// Event Title
 	summary := ""
 	if s := event.GetProperty(ics.ComponentPropertySummary); s != nil {
 		summary = cleanEventSummary(s.Value)
 	}
-
-	description := ""
-	if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
-		description = d.Value
-	}
-
-	location := ""
-	if l := event.GetProperty(ics.ComponentPropertyLocation); l != nil {
-		location = event.GetProperty(ics.ComponentPropertyLocation).Value
-	}
+	originalSummary := summary
 
 	// Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
 	summary = reTag.ReplaceAllString(summary, "")
@@ -405,11 +397,26 @@ func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
 	// What the heck? And why only sometimes???
 	summary = reWeirdStartingNumbers.ReplaceAllString(summary, "")
 
+	// Do all the course-specific replacements
+	for _, repl := range a.courseReplacements {
+		summary = strings.ReplaceAll(summary, repl.key, repl.value)
+	}
 	event.SetSummary(summary)
 
+	// Description
 	// Remember the old title in the description
-	description = summary + "\n" + description
+	description := ""
+	if d := event.GetProperty(ics.ComponentPropertyDescription); d != nil {
+		description = d.Value
+	}
+	description = originalSummary + "\n" + description
 
+	// Location
+	// Replace the location with the building name, if it matches our map
+	location := ""
+	if l := event.GetProperty(ics.ComponentPropertyLocation); l != nil {
+		location = event.GetProperty(ics.ComponentPropertyLocation).Value
+	}
 	results := reRoom.FindStringSubmatch(location)
 	if len(results) == 3 {
 		if building, ok := a.buildingReplacements[results[2]]; ok {
@@ -428,14 +435,9 @@ func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
 	if len(additionalLocations) > 0 {
 		description = "Additional rooms:\n" + strings.Join(additionalLocations, "\n") + "\n\n" + description
 	}
-
 	event.SetDescription(description)
 
-	// set title on summary:
-	for _, repl := range a.courseReplacements {
-		summary = strings.ReplaceAll(summary, repl.key, repl.value)
-	}
-	event.SetSummary(summary)
+	// Set status based on ical status, so cancelled events are marked as such in the calendar
 	switch event.GetProperty(ics.ComponentPropertyStatus).Value {
 	case "CONFIRMED":
 		event.SetStatus(ics.ObjectStatusConfirmed)

@@ -164,9 +164,9 @@ func TestLocationReplacement(t *testing.T) {
 		return
 	}
 	desc := calendar.Components[0].(*ics.VEvent).GetProperty(ics.ComponentPropertyDescription).Value
-	expectedDescription := "Additional rooms:\nMI HS 1\n\nhttps://nav.tum.de/room/5508.02.801\nMW 1801, Ernst-Schmidt-Hörsaal (5508.02.801)\nEinführung in die Rechnerarchitektur\nfix; Abhaltung;"
+	expectedDescription := "Additional rooms:\nMI HS 1\n\nhttps://nav.tum.de/room/5508.02.801\nMW 1801, Ernst-Schmidt-Hörsaal (5508.02.801)\nEinführung in die Rechnerarchitektur (IN0004) VO, Standardgruppe\nfix; Abhaltung;"
 	if desc != expectedDescription {
-		t.Errorf("Description should be %s but is %s", expectedDescription, desc)
+		t.Errorf("Description should be \n\n%s\n\nbut is\n\n%s\n\n", expectedDescription, desc)
 		return
 	}
 }
