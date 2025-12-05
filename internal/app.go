@@ -278,7 +278,25 @@ func (a *App) getCleanedCalendar(all []byte, hiddenCourses map[string]bool) (*ic
 		return nil, err
 	}
 
-	// Create map that tracks if we have already seen a lecture name & datetime (e.g. "lecturexyz-1.2.2024 10:00" -> true)
+	// First pass: collect all locations for each dedup key (lecture name + datetime)
+	// This allows us to show additional rooms in the description when events are deduplicated
+	eventLocations := make(map[string][]string)
+	for _, component := range cal.Components {
+		switch component.(type) {
+		case *ics.VEvent:
+			event := component.(*ics.VEvent)
+			eventSummary := event.GetProperty(ics.ComponentPropertySummary).Value
+			if hiddenCourses[eventSummary] {
+				continue
+			}
+			dedupKey := fmt.Sprintf("%s-%s", eventSummary, event.GetProperty(ics.ComponentPropertyDtStart))
+			if l := event.GetProperty(ics.ComponentPropertyLocation); l != nil && l.Value != "" {
+				eventLocations[dedupKey] = append(eventLocations[dedupKey], l.Value)
+			}
+		}
+	}
+
+	// Second pass: deduplicate and clean events, adding additional rooms to description
 	hasLecture := make(map[string]bool)
 	var newComponents []ics.Component // saves the components we keep because they are not duplicated
 
@@ -300,8 +318,25 @@ func (a *App) getCleanedCalendar(all []byte, hiddenCourses map[string]bool) (*ic
 			}
 			hasLecture[dedupKey] = true // mark event as seen
 
-			// clean up the event
-			a.cleanEvent(event)
+			// Get additional locations from duplicated events (skip the current event's location and duplicates)
+			var additionalLocations []string
+			if locations := eventLocations[dedupKey]; len(locations) > 1 {
+				currentLocation := ""
+				if l := event.GetProperty(ics.ComponentPropertyLocation); l != nil {
+					currentLocation = l.Value
+				}
+				seen := make(map[string]bool)
+				seen[currentLocation] = true
+				for _, loc := range locations {
+					if !seen[loc] {
+						seen[loc] = true
+						additionalLocations = append(additionalLocations, loc)
+					}
+				}
+			}
+
+			// clean up the event (with additional locations for the description)
+			a.cleanEvent(event, additionalLocations)
 			newComponents = append(newComponents, event)
 		default: // keep everything that is not an event (metadata etc.)
 			newComponents = append(newComponents, component)
@@ -342,7 +377,7 @@ var reRoom = regexp.MustCompile("^(.*?),.*?(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\
 // matches strings like: (5612.03.017), (5612.EG.017), (5612.EG.010B)
 var reNavigaTUM = regexp.MustCompile("\\(\\d{4}\\.[a-zA-Z0-9]{2}\\.\\d{3}[A-Z]?\\)")
 
-func (a *App) cleanEvent(event *ics.VEvent) {
+func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
 	summary := ""
 	if s := event.GetProperty(ics.ComponentPropertySummary); s != nil {
 		summary = cleanEventSummary(s.Value)
@@ -388,6 +423,12 @@ func (a *App) cleanEvent(event *ics.VEvent) {
 			}
 		}
 	}
+
+	// Add additional locations from deduplicated events to the description
+	if len(additionalLocations) > 0 {
+		description = "Additional rooms:\n" + strings.Join(additionalLocations, "\n") + "\n\n" + description
+	}
+
 	event.SetDescription(description)
 
 	// set title on summary:
