@@ -37,16 +37,6 @@ function generateLink() {
           queryParams.append("hide", courseName);
     }
 
-    for (const [id, offset] of startOffsetRecurrences.entries()) {
-          if (offset == 0) continue;
-          queryParams.append("startOffset", id.toString() + (offset > 0 ? "+" : "") + offset.toString());
-    }
-
-    for (const [id, offset] of endOffsetRecurrences.entries()) {
-          if (offset == 0) continue;
-          queryParams.append("endOffset", id.toString() + (offset > 0 ? "+" : "") + offset.toString());
-    }
-
     adjustedLink.search = queryParams;
     copyToClipboard(adjustedLink.toString());
     setCopyButton("copied");
@@ -57,14 +47,12 @@ function generateLink() {
 
 function reloadCourses() {
     originalLink = null;
-
     const calLink = getAndCheckCalLink();
     if (!calLink)
         return;
 
     // includes pStud and pToken
     const queryParams = new URLSearchParams(new URL(calLink).search);
-    
     const url = new URL("api/courses", window.location.origin);
     url.search = queryParams;
 
@@ -84,7 +72,6 @@ function reloadCourses() {
             for (const [key, course] of Object.entries(courses)) {
                 const li = document.createElement("li");
                 const input = document.createElement("input");
-                const recurrences = document.createElement("ul");
                 input.type = "checkbox";
                 input.id = course.summary;
                 input.checked = !hiddenCourses.has(key);
@@ -96,27 +83,12 @@ function reloadCourses() {
                     }
                     setCopyButton("reset");
                 };
-                
-                for (const recurrence of Object.values(course.recurrences)) {
-                  const recLi = document.createElement("li");
-                  recLi.id = recurrence.recurringId;
-
-                  const startDate = new Date(recurrence.dtStart);
-                  const endDate = new Date(recurrence.dtEnd);
-                  const dayOfWeek = new Intl.DateTimeFormat("de-DE", {weekday: "long"}).format(startDate);
-
-                  recLi.appendChild(document.createTextNode(`id ${recurrence.recurringId}: `));
-                  recLi.appendChild(document.createTextNode(` ${dayOfWeek}: ${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()} `));
-                  recurrences.appendChild(recLi);
-                }
                 li.appendChild(input);
                 li.appendChild(document.createTextNode(course.summary));
-                li.appendChild(recurrences);
                 courseAdjustList.appendChild(li);
             }
 
-            // enable/disable course adjustment section depending on whether
-            // courses were found
+            // enable/disable course adjustment section depending on whether courses were found
             document.getElementById("courseAdjustDiv").hidden = Object.keys(courses).length === 0;
         })
         .catch(err => {
