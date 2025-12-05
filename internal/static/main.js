@@ -41,7 +41,7 @@ function generateLink() {
 
     for (const [id, offset] of startOffsetRecurrences.entries()) {
           if (offset == 0) continue;
-          queryParams.append("startOffset", id.toString() + (offset > 0 ? "+" : " ") + offset.toString());
+          queryParams.append("startOffset", id.toString() + (offset > 0 ? "+" : "") + offset.toString());
     }
 
     for (const [id, offset] of endOffsetRecurrences.entries()) {

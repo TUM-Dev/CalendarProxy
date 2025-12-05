@@ -212,16 +212,16 @@ func parseOffsetsQuery(values []string) (map[int]int, error) {
 			}
 		}
 
-		id, err := strconv.Atoi(parts[0])
+		id, err := strconv.Atoi(strings.TrimSpace(parts[0]))
 		if err != nil {
 			return offsets, err
 		}
-		offset, err := strconv.Atoi(parts[1])
+		offset, err := strconv.Atoi(strings.TrimSpace(parts[1]))
 		if err != nil {
 			return offsets, err
 		}
 
-		if positive == false {
+		if !positive {
 			offset = -1 * offset
 		}
 
@@ -316,7 +316,7 @@ func (a *App) handleGetCourses(c *gin.Context) {
 			eventSummary := vEvent.GetProperty(ics.ComponentPropertySummary).Value
 			course, exists := courses[eventSummary]
 
-			if exists == false {
+			if !exists {
 				course = Course{
 					Summary:     eventSummary,
 					Hide:        false,
