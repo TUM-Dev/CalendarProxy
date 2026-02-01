@@ -4,8 +4,8 @@ go 1.24.0
 
 require (
 	github.com/arran4/golang-ical v0.3.2
-	github.com/getsentry/sentry-go v0.40.0
-	github.com/getsentry/sentry-go/gin v0.40.0
+	github.com/getsentry/sentry-go v0.42.0
+	github.com/getsentry/sentry-go/gin v0.42.0
 	github.com/gin-gonic/gin v1.11.0
 )
 
