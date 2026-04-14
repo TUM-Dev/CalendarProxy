@@ -119,7 +119,7 @@ func hideTokens(path string) string {
 
 func (a *App) Run() error {
 	if err := sentry.Init(sentry.ClientOptions{
-		Dsn:              "https://2fbc80ad1a99406cb72601d6a47240ce@glitch.exgen.io/4",
+		Dsn:              "https://fb365ad04ce825cc3a0c18f59d4f6f46@o4511219773341696.ingest.de.sentry.io/4511219793199184",
 		Release:          Version,
 		AttachStacktrace: true,
 		EnableTracing:    true,
