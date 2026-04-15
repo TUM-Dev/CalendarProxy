@@ -226,7 +226,12 @@ func (a *App) handleIcal(ctx *gin.Context) {
 		return
 	}
 
-	response := []byte(cleaned.Serialize())
+	// Normalize line endings to CRLF as required by RFC 5545.
+	// First replace any existing CRLF with LF to avoid doubling the \r,
+	// then replace all LF with CRLF.
+	serialized := strings.ReplaceAll(cleaned.Serialize(), "\r\n", "\n")
+	serialized = strings.ReplaceAll(serialized, "\n", "\r\n")
+	response := []byte(serialized)
 	ctx.Header("Content-Type", "text/calendar")
 	ctx.Header("Content-Length", fmt.Sprintf("%d", len(response)))
 
