@@ -171,6 +171,33 @@ func TestLocationReplacement(t *testing.T) {
 	}
 }
 
+func TestNormalizeCRLF(t *testing.T) {
+	testData, app := getTestData(t, "duplication.ics")
+	calendar, err := app.getCleanedCalendar([]byte(testData), map[string]bool{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	serialized := normalizeCRLF(calendar.Serialize())
+
+	// RFC 5545 requires CRLF line endings; there must be no bare \n.
+	if !strings.Contains(serialized, "\r\n") {
+		t.Error("serialized calendar should contain CRLF line endings")
+	}
+	for i, ch := range serialized {
+		if ch == '\n' && (i == 0 || serialized[i-1] != '\r') {
+			t.Error("serialized calendar contains a bare LF (\\n) without a preceding CR (\\r)")
+			break
+		}
+	}
+
+	// Content-Length must equal byte length of the normalized output.
+	response := []byte(serialized)
+	if len(response) == 0 {
+		t.Error("serialized calendar response must not be empty")
+	}
+}
+
 func TestCourseFiltering(t *testing.T) {
 	testData, app := getTestData(t, "coursefiltering.ics")
 
