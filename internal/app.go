@@ -226,18 +226,21 @@ func (a *App) handleIcal(ctx *gin.Context) {
 		return
 	}
 
-	// Normalize line endings to CRLF as required by RFC 5545.
-	// First replace any existing CRLF with LF to avoid doubling the \r,
-	// then replace all LF with CRLF.
-	serialized := strings.ReplaceAll(cleaned.Serialize(), "\r\n", "\n")
-	serialized = strings.ReplaceAll(serialized, "\n", "\r\n")
-	response := []byte(serialized)
+	response := []byte(normalizeCRLF(cleaned.Serialize()))
 	ctx.Header("Content-Type", "text/calendar")
 	ctx.Header("Content-Length", fmt.Sprintf("%d", len(response)))
 
 	if _, err := ctx.Writer.Write(response); err != nil {
 		sentry.CaptureException(err)
 	}
+}
+
+// normalizeCRLF normalizes line endings in s to CRLF (\r\n) as required by RFC 5545.
+// It first replaces any existing CRLF with LF to avoid doubling the \r,
+// then replaces all LF with CRLF.
+func normalizeCRLF(s string) string {
+	s = strings.ReplaceAll(s, "\r\n", "\n")
+	return strings.ReplaceAll(s, "\n", "\r\n")
 }
 
 // handleGetCourses returns a list of all courses that are currently offered on campus.
