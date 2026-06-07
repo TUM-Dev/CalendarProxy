@@ -110,11 +110,11 @@ func hideTokens(path string) string {
 	}
 
 	manyXes := strings.Repeat("X", 12)
-	tokenReplaced := pToken[:4] + manyXes
+	tokenReplaced := pToken[:min(4, len(pToken))] + manyXes
 	if pStud != "" {
-		return fmt.Sprintf("/?pStud=%s&pToken=%s", pStud[:4]+manyXes, tokenReplaced)
+		return fmt.Sprintf("/?pStud=%s&pToken=%s", pStud[:min(4, len(pStud))]+manyXes, tokenReplaced)
 	}
-	return fmt.Sprintf("/?pPers=%s&pToken=%s", pPers[:4]+manyXes, tokenReplaced)
+	return fmt.Sprintf("/?pPers=%s&pToken=%s", pPers[:min(4, len(pPers))]+manyXes, tokenReplaced)
 }
 
 func (a *App) Run() error {
