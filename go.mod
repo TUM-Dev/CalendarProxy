@@ -3,7 +3,7 @@ module github.com/tum-dev/calendar-proxy
 go 1.25.0
 
 require (
-	github.com/arran4/golang-ical v0.3.5
+	github.com/arran4/golang-ical v0.3.6
 	github.com/getsentry/sentry-go v0.48.0
 	github.com/getsentry/sentry-go/gin v0.48.0
 	github.com/gin-gonic/gin v1.12.0
