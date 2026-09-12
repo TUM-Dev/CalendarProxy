@@ -297,7 +297,7 @@ func (a *App) getCleanedCalendar(all []byte, hiddenCourses map[string]bool) (*ic
 			if hiddenCourses[eventSummary] {
 				continue
 			}
-			dedupKey := fmt.Sprintf("%s-%s", eventSummary, event.GetProperty(ics.ComponentPropertyDtStart))
+			dedupKey := fmt.Sprintf("%s-%s", event.GetProperty(ics.ComponentPropertySummary).Value, event.GetProperty(ics.ComponentPropertyDtStart))
 			if l := event.GetProperty(ics.ComponentPropertyLocation); l != nil && l.Value != "" {
 				eventLocations[dedupKey] = append(eventLocations[dedupKey], l.Value)
 			}
@@ -320,7 +320,7 @@ func (a *App) getCleanedCalendar(all []byte, hiddenCourses map[string]bool) (*ic
 			}
 
 			// deduplicate lectures by their summary and datetime
-			dedupKey := fmt.Sprintf("%s-%s", eventSummary, event.GetProperty(ics.ComponentPropertyDtStart))
+			dedupKey := fmt.Sprintf("%s-%s", event.GetProperty(ics.ComponentPropertySummary).Value, event.GetProperty(ics.ComponentPropertyDtStart))
 			if _, ok := hasLecture[dedupKey]; ok {
 				continue
 			}
