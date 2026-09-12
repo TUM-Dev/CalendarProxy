@@ -293,7 +293,7 @@ func (a *App) getCleanedCalendar(all []byte, hiddenCourses map[string]bool) (*ic
 		switch component.(type) {
 		case *ics.VEvent:
 			event := component.(*ics.VEvent)
-			eventSummary := event.GetProperty(ics.ComponentPropertySummary).Value
+			eventSummary := cleanEventSummary(event.GetProperty(ics.ComponentPropertySummary).Value)
 			if hiddenCourses[eventSummary] {
 				continue
 			}
@@ -314,13 +314,13 @@ func (a *App) getCleanedCalendar(all []byte, hiddenCourses map[string]bool) (*ic
 			event := component.(*ics.VEvent)
 
 			// check if the summary contains any of the hidden keys, and if yes, skip it
-			eventSummary := event.GetProperty(ics.ComponentPropertySummary).Value
+			eventSummary := cleanEventSummary(event.GetProperty(ics.ComponentPropertySummary).Value)
 			if hiddenCourses[eventSummary] {
 				continue
 			}
 
 			// deduplicate lectures by their summary and datetime
-			dedupKey := fmt.Sprintf("%s-%s", event.GetProperty(ics.ComponentPropertySummary).Value, event.GetProperty(ics.ComponentPropertyDtStart))
+			dedupKey := fmt.Sprintf("%s-%s", eventSummary, event.GetProperty(ics.ComponentPropertyDtStart))
 			if _, ok := hasLecture[dedupKey]; ok {
 				continue
 			}
