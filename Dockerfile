@@ -1,4 +1,4 @@
-FROM golang:1.26-alpine as builder
+FROM golang:1.27-alpine as builder
 
 # Ca-certificates are required to call HTTPS endpoints.
 RUN apk update && apk add --no-cache ca-certificates tzdata alpine-sdk bash && update-ca-certificates
