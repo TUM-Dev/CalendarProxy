@@ -207,6 +207,7 @@ func TestCourseFiltering(t *testing.T) {
 		t.Error(err)
 		return
 	}
+
 	if len(fullCalendar.Components) != 2 {
 		t.Errorf("Calendar should have 2 entries before course filtering but has %d", len(fullCalendar.Components))
 		return
@@ -229,5 +230,18 @@ func TestCourseFiltering(t *testing.T) {
 	if strings.Contains(summary, filter) {
 		t.Errorf("Summary should not contain %s but is %s", filter, summary)
 		return
+	}
+}
+
+func TestCourseFilteringWithCleanedSummaryKey(t *testing.T) {
+	testData, app := getTestData(t, "coursefiltering_cleanedsummary.ics")
+
+	filteredCalendar, err := app.getCleanedCalendar([]byte(testData), map[string]bool{"Course With Suffix": true})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if len(filteredCalendar.Components) != 0 {
+		t.Errorf("Calendar should have 0 entries after course filtering but has %d", len(filteredCalendar.Components))
 	}
 }
