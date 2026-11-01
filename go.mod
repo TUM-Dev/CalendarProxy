@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/arran4/golang-ical v0.3.6
-	github.com/getsentry/sentry-go v0.49.0
+	github.com/getsentry/sentry-go v0.50.0
 	github.com/getsentry/sentry-go/gin v0.49.0
 	github.com/gin-gonic/gin v1.12.0
 )
@@ -36,7 +36,7 @@ require (
 	golang.org/x/arch v0.22.0 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.39.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
