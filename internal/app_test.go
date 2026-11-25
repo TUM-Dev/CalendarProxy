@@ -214,7 +214,7 @@ func TestCourseFiltering(t *testing.T) {
 	}
 
 	// now filter out one course
-	filter := "Einführung in die Rechnerarchitektur (IN0004) VO, Standardgruppe"
+	filter := "ERA"
 	filteredCalendar, err := app.getCleanedCalendar([]byte(testData), map[string]bool{filter: true})
 	if err != nil {
 		t.Error(err)
