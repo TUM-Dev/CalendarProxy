@@ -385,11 +385,6 @@ var reRoom = regexp.MustCompile("^(.*?),.*?(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\
 // matches strings like: (5612.03.017), (5612.EG.017), (5612.EG.010B)
 var reNavigaTUM = regexp.MustCompile("\\(\\d{4}\\.[a-zA-Z0-9]{2}\\.\\d{3}[A-Z]?\\)")
 
-func (a *App) improveEventSummary(summary string) string {
-
-	return summary
-}
-
 func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
 	// Event Title
 	originalSummary := ""
