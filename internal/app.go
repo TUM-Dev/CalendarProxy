@@ -263,7 +263,7 @@ func (a *App) handleGetCourses(ctx *gin.Context) {
 	for _, component := range cal.Components {
 		switch component.(type) {
 		case *ics.VEvent:
-			eventSummary := cleanEventSummary(component.(*ics.VEvent).GetProperty(ics.ComponentPropertySummary).Value)
+			eventSummary := component.(*ics.VEvent).GetProperty(ics.ComponentPropertySummary).Value
 			if _, exists := courses[eventSummary]; !exists {
 				courses[eventSummary] = Course{
 					Summary: eventSummary,
