@@ -294,6 +294,7 @@ func (a *App) getCleanedCalendar(all []byte, hiddenCourses map[string]bool) (*ic
 		case *ics.VEvent:
 			event := component.(*ics.VEvent)
 			eventSummary := cleanEventSummary(event.GetProperty(ics.ComponentPropertySummary).Value)
+			eventSummary = a.improveEventSummary(eventSummary)
 			if hiddenCourses[eventSummary] {
 				continue
 			}
@@ -315,6 +316,7 @@ func (a *App) getCleanedCalendar(all []byte, hiddenCourses map[string]bool) (*ic
 
 			// check if the summary contains any of the hidden keys, and if yes, skip it
 			eventSummary := cleanEventSummary(event.GetProperty(ics.ComponentPropertySummary).Value)
+			eventSummary = a.improveEventSummary(eventSummary)
 			if hiddenCourses[eventSummary] {
 				continue
 			}
@@ -385,14 +387,7 @@ var reRoom = regexp.MustCompile("^(.*?),.*?(\\d{4})\\.(?:\\d\\d|EG|UG|DG|Z\\d|U\
 // matches strings like: (5612.03.017), (5612.EG.017), (5612.EG.010B)
 var reNavigaTUM = regexp.MustCompile("\\(\\d{4}\\.[a-zA-Z0-9]{2}\\.\\d{3}[A-Z]?\\)")
 
-func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
-	// Event Title
-	summary := ""
-	if s := event.GetProperty(ics.ComponentPropertySummary); s != nil {
-		summary = cleanEventSummary(s.Value)
-	}
-	originalSummary := summary
-
+func (a *App) improveEventSummary(summary string) string {
 	// Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
 	summary = reTag.ReplaceAllString(summary, "")
 	// remove location and teacher from the language course title
@@ -409,6 +404,19 @@ func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
 	for _, repl := range a.courseReplacements {
 		summary = strings.ReplaceAll(summary, repl.key, repl.value)
 	}
+
+	// Second pass to get rid of newly created trailing commas
+	summary = cleanEventSummary(summary)
+	return summary
+}
+
+func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
+	// Event Title
+	originalSummary := ""
+	if s := event.GetProperty(ics.ComponentPropertySummary); s != nil {
+		originalSummary = cleanEventSummary(s.Value)
+	}
+	summary := a.improveEventSummary(originalSummary)
 	event.SetSummary(summary)
 
 	// Description
@@ -458,6 +466,7 @@ func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
 
 func cleanEventSummary(eventSummary string) string {
 	eventSummary = strings.TrimSpace(eventSummary)
-	eventSummary = strings.TrimSuffix(eventSummary, " ,")
+	eventSummary = strings.TrimSuffix(eventSummary, ",")
+	eventSummary = strings.TrimSpace(eventSummary)
 	return eventSummary
 }
