@@ -252,7 +252,7 @@ func (a *App) handleGetCourses(ctx *gin.Context) {
 		return
 	}
 
-	cal, err := a.getCleanedCalendar(allEvents, map[string]bool{})
+	cal, err := ics.ParseCalendar(strings.NewReader(string(allEvents)))
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -263,7 +263,7 @@ func (a *App) handleGetCourses(ctx *gin.Context) {
 	for _, component := range cal.Components {
 		switch component.(type) {
 		case *ics.VEvent:
-			eventSummary := cleanEventSummary(component.(*ics.VEvent).GetProperty(ics.ComponentPropertySummary).Value)
+			eventSummary := component.(*ics.VEvent).GetProperty(ics.ComponentPropertySummary).Value
 			if _, exists := courses[eventSummary]; !exists {
 				courses[eventSummary] = Course{
 					Summary: eventSummary,
@@ -387,12 +387,11 @@ var reNavigaTUM = regexp.MustCompile("\\(\\d{4}\\.[a-zA-Z0-9]{2}\\.\\d{3}[A-Z]?\
 
 func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
 	// Event Title
-	summary := ""
+	originalSummary := ""
 	if s := event.GetProperty(ics.ComponentPropertySummary); s != nil {
-		summary = cleanEventSummary(s.Value)
+		originalSummary = cleanEventSummary(s.Value)
 	}
-	originalSummary := summary
-
+	summary := originalSummary
 	// Remove the TAG and anything after e.g.: (IN0001) or [MA0001]
 	summary = reTag.ReplaceAllString(summary, "")
 	// remove location and teacher from the language course title
@@ -409,6 +408,10 @@ func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
 	for _, repl := range a.courseReplacements {
 		summary = strings.ReplaceAll(summary, repl.key, repl.value)
 	}
+
+	// Second pass to get rid of newly created trailing commas
+	summary = cleanEventSummary(summary)
+
 	event.SetSummary(summary)
 
 	// Description
@@ -458,6 +461,7 @@ func (a *App) cleanEvent(event *ics.VEvent, additionalLocations []string) {
 
 func cleanEventSummary(eventSummary string) string {
 	eventSummary = strings.TrimSpace(eventSummary)
-	eventSummary = strings.TrimSuffix(eventSummary, " ,")
+	eventSummary = strings.TrimSuffix(eventSummary, ",")
+	eventSummary = strings.TrimSpace(eventSummary)
 	return eventSummary
 }
